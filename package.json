@@ -1,0 +1,82 @@
+{
+  "name": "dot8assetmanager",
+  "displayName": "dot8assetmanager",
+  "description": "Dot 8 Engine asset manager",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.110.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "Dot8 Asset Manager Configuration",
+      "properties": {
+        "dot8assetmanager.rootPath": {
+          "type": "string",
+          "default": "../3.resources",
+          "description": "The root path for assets",
+          "scope": "window"
+        },
+        "dot8assetmanager.enableFeature": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable the sample feature.",
+          "scope": "resource"
+        },
+        "dot8assetmanager.buildPath": {
+          "type": "string",
+          "default": "build/",
+          "description": "Path where build artifacts are generated."
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "dot8assetmanager.scan",
+        "title": "scan changes"
+      },
+      {
+        "command": "dot8assetmanager.enable",
+        "title": "enable dot8 asset manager"
+      },
+      {
+        "command": "dot8assetmanager.disable",
+        "title": "disable dot8 asset manager"
+      },
+      {
+        "command": "dot8assetmanager.setup",
+        "title": "setup dot8 asset manager"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/assert": "^1.5.11",
+    "@types/jest": "^30.0.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^22.19.15",
+    "@types/vscode": "^1.110.0",
+    "@vscode/test-cli": "^0.0.11",
+    "@vscode/test-electron": "^2.5.2",
+    "eslint": "^9.39.3",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.56.1"
+  },
+  "dependencies": {
+    "fast-xml-parser": "^5.5.10",
+    "vscode": "^1.1.37"
+  }
+}
