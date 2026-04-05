@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
-//mport { setupCommand } from './config/setup';
-import { config, saveConfig, watchConfig } from './config/config';
+import { config, reloadConfig, saveConfig, watchConfig } from './config/config';
 import { registerScanCommand } from './commands/scan';
 import { registerApplyCommand } from './commands/Apply';
 
@@ -9,8 +8,12 @@ export let outputChannel: vscode.OutputChannel;
 
 export async function activate(context: vscode.ExtensionContext) {
 
-    // await context.workspaceState.update('hasRunBefore', false);
-    const hasRunBefore = context.workspaceState.get<boolean>('hasRunBefore');
+    // const hasWorkspace = !!vscode.workspace.workspaceFolders?.length;
+    // if (!hasWorkspace) {
+    //     vscode.window.showErrorMessage('Please open a workspace folder to use Dot8AssetManager.');
+    //     return;
+    // }
+    // const hasRunBefore = context.workspaceState.get<boolean>('hasRunBefore');
 
     // we need context for the setup command, so we register it here and pass context to the function
     // let setup = vscode.commands.registerCommand('dot8assetmanager.setup', async () => {
@@ -23,22 +26,23 @@ export async function activate(context: vscode.ExtensionContext) {
     // );
 
     watchConfig(context); // auto-reload on settings change
+    reloadConfig();
+    // if (!hasRunBefore) {
+    //     const answer = await vscode.window.showInformationMessage(
+    //         '👋 Welcome! Would you like to set up Dot8AssetManager for this workspace?',
+    //         'Yes, set it up',
+    //         'Skip'
+    //     );
 
-    if (!hasRunBefore) {
-        const answer = await vscode.window.showInformationMessage(
-            '👋 Welcome! Would you like to set up Dot8AssetManager for this workspace?',
-            'Yes, set it up',
-            'Skip'
-        );
+    //     if (answer === 'Yes, set it up') {
+    //         await vscode.commands.executeCommand('dot8assetmanager.setup');
+    //     }
 
-        if (answer === 'Yes, set it up') {
-            await vscode.commands.executeCommand('dot8assetmanager.setup');
-        }
+    //     // Mark this workspace as set up
+    //     await context.workspaceState.update('hasRunBefore', true);
+    // }
 
-        // Mark this workspace as set up
-        await context.workspaceState.update('hasRunBefore', true);
-    }
-
+    
 
     console.log("Just getting started...");
     outputChannel = vscode.window.createOutputChannel("dot8assetmanager");
@@ -71,64 +75,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     //getFiles('data');
 
-    // const disposable = vscode.commands.registerCommand('dot8assetmanager.scan',
-    //     async () => {
-    //         try {
-    //             const startTime = Date.now();
-    //             outputChannel.appendLine(`[SCAN] Starting scan at ${new Date().toISOString()}`);
-    //             vscode.window.showInformationMessage('scanning...');
-    //             outputChannel.appendLine(`[SCAN] Scanning folder: ${config.rootFolder}`);
 
-    //             const files = await getFiles(config.rootFolder);
-    //             outputChannel.appendLine(`[SCAN] Found ${files.length} files to process`);
-                
-    //             const filesmetadata = await getMetadataFiles(files);
-    //             outputChannel.appendLine(`[SCAN] Found ${filesmetadata.length} metadata files`);
-
-    //             const unmatched = files.filter(a => 
-    //                 !filesmetadata.some(b => b.filter === a.filter));
-    //             outputChannel.appendLine(`[SCAN] ${unmatched.length} unmatched files (need new metadata)`);
-
-    //             // get modified items
-    //             const updated = files.map(a => ({
-    //                 a, b: filesmetadata.find(b => b.filter === a.filter)}))
-    //                 .filter(pair => pair.b !== undefined && pair.a.modified > pair.b.modified)
-    //                 .map(pair => pair.b);
-    //             outputChannel.appendLine(`[SCAN] ${updated.length} updated files (metadata needs refresh)`);
-
-    //             // create metadata for unmatched items
-    //             for (const fileData of unmatched) {
-    //                 outputChannel.appendLine(`[METADATA] Creating metadata for: ${fileData?.path}`);
-    //                 try {
-    //                     CreateMetadata(fileData.path);
-    //                 } catch (error) {
-    //                     outputChannel.appendLine(`[ERROR] Failed to create metadata for ${fileData?.path}: ${error}`);
-    //                 }
-    //             }
-
-    //             // process updated items
-    //             for (const fileData of updated) {
-    //                 outputChannel.appendLine(`[ACTION] Processing updated file: ${fileData?.path}`);
-    //                 try {
-    //                     await getActionMetadata(<IFileItem>fileData);
-    //                 } catch (error) {
-    //                     outputChannel.appendLine(`[ERROR] Failed to process file ${fileData?.path}: ${error}`);
-    //                 }
-    //             }
-
-    //             const duration = Date.now() - startTime;
-    //             outputChannel.appendLine(`[SCAN] Completed in ${duration}ms at ${new Date().toISOString()}`);
-    //             vscode.window.showInformationMessage(`Scan complete: ${unmatched.length} new, ${updated.length} updated`);
-    //         } catch (error) {
-    //             const errorMsg = `[SCAN] Fatal error: ${error instanceof Error ? error.message : String(error)}`;
-    //             outputChannel.appendLine(errorMsg);
-    //             vscode.window.showErrorMessage('Scan failed: ' + errorMsg);
-    //         }
-    //     }
-    // );
-
-
-    //context.subscriptions.push(disposable);
 }
 
 const disposableEnable = vscode.commands.registerCommand('dot8assetmanager.enable', async () => {
@@ -166,35 +113,3 @@ export function deactivate() {
         outputChannel.dispose();
     }
 }
-
-// function getWorkspaceFolder(): vscode.Uri | undefined {
-//     return vscode.workspace.workspaceFolders?.[0]?.uri;
-// }
-
-// function saveConfig(data: vscode.WorkspaceConfiguration) {
-//     const folder = getWorkspaceFolder();
-//     if (!folder) {return;}
-
-//     const configPath = path.join(folder, '.dot8assetmanager.json');
-//     fs.writeFileSync(configPath, JSON.stringify(data, null, 2));
-// }
-
-// // LOAD
-// function loadConfig(): vscode.WorkspaceConfiguration | null {
-//     const folder = getWorkspaceFolder();
-//     if (!folder) return null;
-
-//     const config = vscode.workspace.getConfiguration('Dot8AssetManager', folder);
-
-//     return config;
-// }
-
-
-
-
-// function readActionMetadata(filePath: string): IActionFile {
-//     return JSON.parse(
-//         fs.readFileSync(path.resolve(filePath), 'utf-8')
-//     ) as IActionFile;
-// }
-

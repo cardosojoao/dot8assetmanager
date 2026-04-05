@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { CreateMetadata } from '../services/metaData';
-import { getActionMetadata } from '../services/actionExecute';
 import { IFileItem } from '../models/IFileItem';
 import { config } from '../config/config';
 import { outputChannel } from '../extension';
@@ -11,9 +10,10 @@ export function registerScanCommand(context: vscode.ExtensionContext) {
  const disposable = vscode.commands.registerCommand('dot8assetmanager.scan',
         async () => {
             try {
+                vscode.window.showInformationMessage('start scanning...');
                 const startTime = Date.now();
                 outputChannel.appendLine(`[SCAN] Starting scan at ${new Date().toISOString()}`);
-                vscode.window.showInformationMessage('scanning...');
+                
                 outputChannel.appendLine(`[SCAN] Scanning folder: ${config.scanFolders}`);
 
                 const files = await getFiles(config.scanFolders, config.scanExtensions);
@@ -44,15 +44,6 @@ export function registerScanCommand(context: vscode.ExtensionContext) {
                 }
 
                 await ProcessFiles( updated);
-                // // process updated items
-                // for (const fileData of updated) {
-                //     outputChannel.appendLine(`[ACTION] Processing updated file: ${fileData?.path}`);
-                //     try {
-                //         await getActionMetadata(<IFileItem>fileData);
-                //     } catch (error) {
-                //         outputChannel.appendLine(`[ERROR] ❌ Failed to process file ${fileData?.path}: ${error}`);
-                //     }
-                // }
 
                 const duration = Date.now() - startTime;
                 outputChannel.appendLine(`[SCAN] Completed in ${duration}ms at ${new Date().toISOString()}`);

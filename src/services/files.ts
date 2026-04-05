@@ -15,13 +15,13 @@ export async function getFiles(scanFolders: string[], extensions: string[] = [])
             return [];
         }
 
-        outputChannel.appendLine(`[FILES] Scanning workspace: ${workspaceRoot}`);
-        
+        //outputChannel.appendLine(`[FILES] Scanning workspace: ${workspaceRoot}`);
+
         for (const folder of scanFolders) {
             outputChannel.appendLine(`[FILES] Configured scan folder: ${folder}`);
             const targetFolder = path.resolve(workspaceRoot, '..', folder);
             outputChannel.appendLine(`[FILES] Target folder: ${targetFolder}`);
-        
+
             const pattern = new vscode.RelativePattern(targetFolder, `**/*.{${extensions.join(',')}}`);
             const files = await vscode.workspace.findFiles(
                 pattern, '**/*.{metadata,cmd,ini}'
@@ -33,7 +33,7 @@ export async function getFiles(scanFolders: string[], extensions: string[] = [])
                 try {
                     const stat = fs.statSync(file.fsPath);
                     const pathFile = file.fsPath;
-                    
+
                     return {
                         path: pathFile,
                         modified: stat.mtime,
@@ -44,7 +44,7 @@ export async function getFiles(scanFolders: string[], extensions: string[] = [])
                     throw error;
                 }
             }));
-        }    
+        }
     } catch (error) {
         outputChannel.appendLine(`[FILES] ❌ Fatal error scanning files: ${error instanceof Error ? error.message : String(error)}`);
         throw error;
@@ -56,7 +56,7 @@ export async function getFiles(scanFolders: string[], extensions: string[] = [])
 export async function getMetadataFiles(files: IFileItem[]): Promise<IFileItem[]> {
     const items: IFileItem[] = [];
     outputChannel.appendLine(`[METADATA] Processing ${files.length} files for metadata`);
-    
+
     for (const fileData of files) {
         try {
             const fileMetadata = changeExtension(fileData.path, '.metadata');
@@ -68,7 +68,6 @@ export async function getMetadataFiles(files: IFileItem[]): Promise<IFileItem[]>
                     modified: new Date(parsed.Modified),
                     filter: path.join(path.dirname(parsed.Path), path.basename(parsed.Path, path.extname(parsed.Path))).toLowerCase()
                 });
-                //outputChannel.appendLine(`[METADATA] Loaded: ${fileMetadata}`);
             } else {
                 outputChannel.appendLine(`[METADATA] No metadata file for: ${fileData.path}`);
             }
@@ -76,7 +75,7 @@ export async function getMetadataFiles(files: IFileItem[]): Promise<IFileItem[]>
             outputChannel.appendLine(`[METADATA] ❌ Error processing ${fileData.path}: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
-    
+
     outputChannel.appendLine(`[METADATA] Loaded metadata for ${items.length}/${files.length} files`);
     return items;
 }

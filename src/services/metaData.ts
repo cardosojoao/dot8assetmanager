@@ -8,16 +8,6 @@ import { IFileItem } from '../models/IFileItem';
 
 const GENERATED_BY = `Dot8-MetadataUpdate-${version}`;
 
-
-
-// function loadOrCreateMetadata(targetPath: string): IMetadata {
-//     const metadataPath = getMetadataFilePath(targetPath);
-//     const raw = fs.readFileSync(metadataPath, 'utf-8');
-//     const data: IMetadata = JSON.parse(raw);
-//     return data;
-//}
-
-
 export function CreateMetadata(targetPath: string): void {
     const metadataPath = getMetadataFilePath(targetPath);
     if (!fs.existsSync(metadataPath)) {
@@ -65,7 +55,6 @@ export function saveMetadata(metadata: IMetadata, metadataPath: string): void {
 function updateTileSet(metadata: IMetadata, filePath: string): IMetadata {
     const tileSet = readTileSet(filePath);
     const pathData = path.join(path.dirname(metadata.Path), tileSet.image.source);
-    //const metadataPath = getMetadataFilePath(pathData);
 
     metadata.GeneratedBy = GENERATED_BY;
     metadata.Width = tileSet.tilewidth;
@@ -73,8 +62,6 @@ function updateTileSet(metadata: IMetadata, filePath: string): IMetadata {
     metadata.Columns = tileSet.columns;
     metadata.Rows = tileSet.tilecount / tileSet.columns;
     metadata.Path = pathData;
-
-    //saveMetadata(metadata, metadataPath);
     return metadata;
 }
 
@@ -86,8 +73,6 @@ function updatePattern(metadata: IMetadata, filePath: string): IMetadata {
 
     metadata.GeneratedBy = GENERATED_BY;
     metadata.Path = filePath;
-
-    //saveMetadata(metadata, metadataPath);
     return metadata;
 }
 
@@ -99,8 +84,6 @@ function updateGeneric(metadata: IMetadata, filePath: string): IMetadata {
 
     metadata.GeneratedBy = GENERATED_BY;
     metadata.Path = filePath;
-
-    //saveMetadata(metadata, metadataPath);
     return metadata;
 }
 

@@ -51,25 +51,41 @@
     "commands": [
       {
         "command": "dot8assetmanager.scan",
-        "title": "scan for changes"
+        "title": "scan for updates",
+        "category": "dot8assetmanager"
+
       },
       {
         "command": "dot8assetmanager.apply",
-        "title": "apply transformations"
+        "title": "apply actions",
+         "category": "dot8assetmanager"
       },
       {
         "command": "dot8assetmanager.enable",
-        "title": "enable dot8 asset manager"
+        "title": "enable dot8 asset manager",
+        "category": "dot8assetmanager"
       },
       {
         "command": "dot8assetmanager.disable",
-        "title": "disable dot8 asset manager"
+        "title": "disable dot8 asset manager",
+        "category": "dot8assetmanager"
+
       },
       {
         "command": "dot8assetmanager.setup",
-        "title": "setup dot8 asset manager"
+        "title": "setup dot8 asset manager",
+        "category": "dot8assetmanager"
       }
-    ]
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "dot8assetmanager.scan",
+          "when": "true"
+        }
+      ]
+    }
+
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",

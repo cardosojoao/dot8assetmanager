@@ -13,8 +13,6 @@ function loadConfig(): Dot8AssetManagerConfig {
     console.log('Loading config:');
     console.log('rootFolder:', cfg.rootPath);
 
-
-
     return {
         scanFolders: cfg.ScanFolders,
         scanExtensions: cfg.ScanExtensions,

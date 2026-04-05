@@ -14,6 +14,7 @@ export function registerApplyCommand(context: vscode.ExtensionContext) {
         async () => {
             try {
 
+                vscode.window.showInformationMessage('start scanning...');
                 const startTime = Date.now();
                 outputChannel.appendLine(`[SCAN] Starting apply at ${new Date().toISOString()}`);
                 outputChannel.appendLine(`[SCAN] Scanning folder: ${config.scanFolders}`);
