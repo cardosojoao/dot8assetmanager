@@ -1,37 +1,35 @@
 import * as vscode from 'vscode';
 import { CreateMetadata } from '../services/metaData';
-import { getActionMetadata } from '../services/actionExecute';
+import { executeAction, getActionMetadata } from '../services/actionExecute';
 import { IFileItem } from '../models/IFileItem';
 import { config } from '../config/config';
 import { outputChannel } from '../extension';
-import { getFiles, getMetadataFiles } from '../services/files';
+import { getFiles, getMetadataFiles, } from '../services/files';
+import * as Path from 'path';
+import { Action } from '../models/action';
 import { ProcessFiles } from '../services/ProcessFile';
 
-export function registerScanCommand(context: vscode.ExtensionContext) {
- const disposable = vscode.commands.registerCommand('dot8assetmanager.scan',
+export function registerApplyCommand(context: vscode.ExtensionContext) {
+    const disposable = vscode.commands.registerCommand('dot8assetmanager.apply',
         async () => {
             try {
+
                 const startTime = Date.now();
-                outputChannel.appendLine(`[SCAN] Starting scan at ${new Date().toISOString()}`);
-                vscode.window.showInformationMessage('scanning...');
+                outputChannel.appendLine(`[SCAN] Starting apply at ${new Date().toISOString()}`);
                 outputChannel.appendLine(`[SCAN] Scanning folder: ${config.scanFolders}`);
 
                 const files = await getFiles(config.scanFolders, config.scanExtensions);
                 outputChannel.appendLine(`[SCAN] Found ${files.length} files to process`);
-                
+
                 const filesmetadata = await getMetadataFiles(files);
                 outputChannel.appendLine(`[SCAN] Found ${filesmetadata.length} metadata files`);
 
-                const unmatched = files.filter((a: IFileItem) => 
+                const unmatched = files.filter((a: IFileItem) =>
                     !filesmetadata.some((b: IFileItem) => b.filter === a.filter));
                 outputChannel.appendLine(`[SCAN] ${unmatched.length} unmatched files (need new metadata)`);
 
                 // get modified items
-                const updated = files.map((a: IFileItem) => ({
-                    a, b: filesmetadata.find((b: IFileItem) => b.filter === a.filter)}))
-                    .filter((pair: {a: IFileItem, b: IFileItem | undefined}) => pair.b !== undefined && pair.a.modified > pair.b.modified)
-                    .map((pair: {a: IFileItem, b: IFileItem | undefined}) => pair.b as IFileItem);
-                outputChannel.appendLine(`[SCAN] ${updated.length} updated files (metadata needs refresh)`);
+                outputChannel.appendLine(`[SCAN] ${files.length} updated files `);
 
                 // create metadata for unmatched items
                 for (const fileData of unmatched) {
@@ -43,20 +41,14 @@ export function registerScanCommand(context: vscode.ExtensionContext) {
                     }
                 }
 
-                await ProcessFiles( updated);
-                // // process updated items
-                // for (const fileData of updated) {
-                //     outputChannel.appendLine(`[ACTION] Processing updated file: ${fileData?.path}`);
-                //     try {
-                //         await getActionMetadata(<IFileItem>fileData);
-                //     } catch (error) {
-                //         outputChannel.appendLine(`[ERROR] ❌ Failed to process file ${fileData?.path}: ${error}`);
-                //     }
-                // }
+                await ProcessFiles( files);
+
 
                 const duration = Date.now() - startTime;
                 outputChannel.appendLine(`[SCAN] Completed in ${duration}ms at ${new Date().toISOString()}`);
-                vscode.window.showInformationMessage(`Scan complete: ${unmatched.length} new, ${updated.length} updated`);
+                vscode.window.showInformationMessage(`Scan complete: ${unmatched.length} new, ${files.length} updated`);
+
+
             } catch (error) {
                 const errorMsg = `[SCAN] ❌Fatal error: ${error instanceof Error ? error.message : String(error)}`;
                 outputChannel.appendLine(errorMsg);
@@ -65,6 +57,7 @@ export function registerScanCommand(context: vscode.ExtensionContext) {
         }
     );
 
-  context.subscriptions.push(disposable);
-}     
-   
+    context.subscriptions.push(disposable);
+}
+
+

@@ -1,6 +1,6 @@
 {
 	"compilerOptions": {
-		"types": ["node"],
+		"types": ["node", "mocha"],
 		"module": "Node16",
 		"target": "ES2022",
 		"outDir": "out",

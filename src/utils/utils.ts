@@ -65,3 +65,7 @@ export const ExecuteFile = (filePath: string, parameters: string): boolean => {
         return false;
     }
 };
+
+export function getMetadataFilePath(inputPath: string): string {
+    return changeExtension(inputPath, '.metadata');
+}

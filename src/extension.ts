@@ -1,16 +1,8 @@
-//import { PrivateKeyInput } from 'node:crypto';
 import * as vscode from 'vscode';
-import * as fs from 'fs';
-import * as path from 'path';
-import { execSync } from 'node:child_process';
-import { setupCommand } from './config/setup';
+//mport { setupCommand } from './config/setup';
 import { config, saveConfig, watchConfig } from './config/config';
-import { Action } from './models/action';
-import { changeExtension } from './utils/utils';
-import { IMetadata } from './models/IMetadata';
-import { CreateMetadata, saveMetadata } from './services/metaData';
-import { IFileItem } from './models/IFileItem';
 import { registerScanCommand } from './commands/scan';
+import { registerApplyCommand } from './commands/Apply';
 
 export let outputChannel: vscode.OutputChannel;
 
@@ -21,10 +13,10 @@ export async function activate(context: vscode.ExtensionContext) {
     const hasRunBefore = context.workspaceState.get<boolean>('hasRunBefore');
 
     // we need context for the setup command, so we register it here and pass context to the function
-    let setup = vscode.commands.registerCommand('dot8assetmanager.setup', async () => {
-        await setupCommand(context);  // ✅ pass context here
-    });
-    context.subscriptions.push(setup);
+    // let setup = vscode.commands.registerCommand('dot8assetmanager.setup', async () => {
+    //     await setupCommand(context);  // ✅ pass context here
+    // });
+    // context.subscriptions.push(setup);
 
     // context.subscriptions.push(
     //     vscode.commands.registerCommand('dot8assetmanager.setup', setupCommand)
@@ -53,7 +45,8 @@ export async function activate(context: vscode.ExtensionContext) {
 
 
     registerScanCommand(context);
-    
+    registerApplyCommand(context);
+
     //config.rootFolder = "test root folder";
     //await saveConfig(); // example of saving config programmatically
 
@@ -61,7 +54,7 @@ export async function activate(context: vscode.ExtensionContext) {
     outputChannel.appendLine("show config values:");
 
     // Use config anywhere
-    outputChannel.appendLine(config.rootFolder);
+    //outputChannel.appendLine(config.scanFolders);
     //outputChannel.appendLine(config.apiKey);
 
 

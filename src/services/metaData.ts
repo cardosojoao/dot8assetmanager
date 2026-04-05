@@ -2,26 +2,24 @@ import fs from 'fs';
 import path from 'path';
 import { version } from '../../package.json';
 import { readTileSet } from '../services/TileSet';
-import { changeExtension } from '../utils/utils';
+import { changeExtension, getMetadataFilePath } from '../utils/utils';
 import { IMetadata } from '../models/IMetadata';
+import { IFileItem } from '../models/IFileItem';
 
 const GENERATED_BY = `Dot8-MetadataUpdate-${version}`;
 
-function getMetadataFilePath(inputPath: string): string {
-    return changeExtension(inputPath, '.metadata');
-}
 
-function loadOrCreateMetadata(targetPath: string): IMetadata {
+
+// function loadOrCreateMetadata(targetPath: string): IMetadata {
+//     const metadataPath = getMetadataFilePath(targetPath);
+//     const raw = fs.readFileSync(metadataPath, 'utf-8');
+//     const data: IMetadata = JSON.parse(raw);
+//     return data;
+//}
+
+
+export function CreateMetadata(targetPath: string): void {
     const metadataPath = getMetadataFilePath(targetPath);
-    const raw = fs.readFileSync(metadataPath, 'utf-8');
-    const data: IMetadata = JSON.parse(raw);
-    return data;
-}
-
-
-export function   CreateMetadata(targetPath: string): void {
-    const metadataPath = getMetadataFilePath(targetPath);
-
     if (!fs.existsSync(metadataPath)) {
         const modified = fs.statSync(targetPath).mtime;
         const metadata: IMetadata = {
@@ -29,26 +27,29 @@ export function   CreateMetadata(targetPath: string): void {
             Modified: modified.toISOString(),
             Path: targetPath,
         } as IMetadata;
-        updateMetadataType(metadata);
+        const update = updateMetadataType(metadata,targetPath);
+        saveMetadata(update, metadataPath);
     }
 }
 
 
-function updateMetadataType(metdata: IMetadata): void {
-    switch (path.extname(metdata.Path)) {
+export function updateMetadataType(metadata: IMetadata, filePath: string): IMetadata {
+    let update = metadata;
+    switch (path.extname(filePath).toLowerCase()) {
         case '.tsx':
-            updateTileSet(metdata);
+            update = updateTileSet(metadata, filePath);
             break;
         case '.png':
-            updatePattern(metdata);
+            update = updatePattern(metadata,filePath);
             break;
         case '.afb':
         case '.pt3':
-            updateGeneric(metdata);
+            update = updateGeneric(metadata,filePath);
             break;
         default:
             break;
     }
+    return update;
 }
 
 
@@ -61,10 +62,10 @@ export function saveMetadata(metadata: IMetadata, metadataPath: string): void {
 //
 // Update metadata for a tileset file.
 //
-function updateTileSet(metadata: IMetadata): void {
-    const tileSet = readTileSet(metadata.Path);
+function updateTileSet(metadata: IMetadata, filePath: string): IMetadata {
+    const tileSet = readTileSet(filePath);
     const pathData = path.join(path.dirname(metadata.Path), tileSet.image.source);
-    const metadataPath = getMetadataFilePath(pathData);
+    //const metadataPath = getMetadataFilePath(pathData);
 
     metadata.GeneratedBy = GENERATED_BY;
     metadata.Width = tileSet.tilewidth;
@@ -73,30 +74,34 @@ function updateTileSet(metadata: IMetadata): void {
     metadata.Rows = tileSet.tilecount / tileSet.columns;
     metadata.Path = pathData;
 
-    saveMetadata(metadata, metadataPath);
+    //saveMetadata(metadata, metadataPath);
+    return metadata;
 }
 
 //
 // Update metadata for a pattern file (e.g. .png).
 //
-function updatePattern(metadata: IMetadata): void {
-    const metadataPath = getMetadataFilePath(metadata.Path);
+function updatePattern(metadata: IMetadata, filePath: string): IMetadata {
+    //const metadataPath = getMetadataFilePath(metadata.Path);
 
     metadata.GeneratedBy = GENERATED_BY;
-    metadata.Path = metadata.Path;
+    metadata.Path = filePath;
 
-    saveMetadata(metadata, metadataPath);
+    //saveMetadata(metadata, metadataPath);
+    return metadata;
 }
 
 //
 // Update metadata for generic files (e.g. .afb, .pt3).
 //
-function updateGeneric(metadata: IMetadata): void {
-    const metadataPath = getMetadataFilePath(metadata.Path);
+function updateGeneric(metadata: IMetadata, filePath: string): IMetadata {
+    //const metadataPath = getMetadataFilePath(metadata.Path);
 
     metadata.GeneratedBy = GENERATED_BY;
+    metadata.Path = filePath;
 
-    saveMetadata(metadata, metadataPath);
+    //saveMetadata(metadata, metadataPath);
+    return metadata;
 }
 
 export async function getMetadata(fileData: string): Promise<IMetadata> {

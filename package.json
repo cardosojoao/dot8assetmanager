@@ -17,10 +17,22 @@
     "configuration": {
       "title": "Dot8 Asset Manager Configuration",
       "properties": {
-        "dot8assetmanager.rootPath": {
-          "type": "string",
-          "default": "../3.resources",
-          "description": "The root path for assets",
+        "dot8assetmanager.ScanFolders": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Folders to be scanned for assets.",
+          "scope": "window"
+        },
+        "dot8assetmanager.ScanExtensions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "File extensions to be scanned for assets.",
           "scope": "window"
         },
         "dot8assetmanager.enableFeature": {
@@ -39,7 +51,11 @@
     "commands": [
       {
         "command": "dot8assetmanager.scan",
-        "title": "scan changes"
+        "title": "scan for changes"
+      },
+      {
+        "command": "dot8assetmanager.apply",
+        "title": "apply transformations"
       },
       {
         "command": "dot8assetmanager.enable",
