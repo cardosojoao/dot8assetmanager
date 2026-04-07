@@ -6,22 +6,11 @@ A VS Code extension for managing and processing game assets for the **Dot8 Engin
 
 ## Features
 
-- **Automatic asset scanning** — detects new and modified asset files across configured asset directories.
-- **Metadata generation** — creates `.metadata` sidecar files for each asset containing path, timestamps, dimensions, and tileset information.
+- **Incremental & Full scanning** — update only changed assets or regenerate all assets with `updateChangedAssets` or `updateAllAssets` commands.
+- **Metadata generation** — creates `.metadata` sidecar files for all supported assets. PNG files get enriched metadata with image dimensions. TSX (Tiled tileset) files include parsed tileset information (tile width, height, columns, rows). All other formats receive basic metadata with path and timestamps.
 - **Tileset support** — parses `.tsx` (Tiled tileset) files using `fast-xml-parser` to extract tile dimensions, column/row counts, and linked image sources.
 - **Action pipelines** — executes per-directory `action.metadata` scripts with per-extension step definitions and metadata-interpolated arguments (e.g. `${file}`, `${cellwidth}`).
-- **First-run setup wizard** — prompts on first workspace activation to configure the extension.
 - **Live config reload** — automatically reloads settings when `settings.json` changes, no restart required.
-
-### Supported asset types
-
-| Extension | Description |
-|-----------|-------------|
-| `.png` | Sprite / pattern images |
-| `.tsx` | Tiled tileset files |
-| `.afb` | Dot8 animation banks |
-| `.pt3` | Dot8 pattern files |
-| `.json.gpl` | Colour palette files |
 
 ---
 
@@ -29,10 +18,8 @@ A VS Code extension for managing and processing game assets for the **Dot8 Engin
 
 | Command | Title | Description |
 |---------|-------|-------------|
-| `dot8assetmanager.scan` | Scan changes | Scans the asset root for new and modified files, creates missing metadata, and runs action pipelines for updated files. |
-| `dot8assetmanager.setup` | Setup Dot8 Asset Manager | Runs the first-time setup wizard for the current workspace. |
-| `dot8assetmanager.enable` | Enable Dot8 Asset Manager | Enables the extension for the current workspace. |
-| `dot8assetmanager.disable` | Disable Dot8 Asset Manager | Disables the extension for the current workspace. |
+| `dot8assetmanager.updateChangedAssets` | Update Changed Assets | Scans the asset folders for new and modified files, creates missing metadata, and processes only the changed assets. |
+| `dot8assetmanager.updateAllAssets` | Update All Assets | Scans and processes all asset files, regenerating metadata and running action pipelines for every asset. |
 
 All commands are accessible via the **Command Palette** (`Ctrl+Shift+P`).
 
@@ -42,9 +29,8 @@ All commands are accessible via the **Command Palette** (`Ctrl+Shift+P`).
 
 | Setting | Type | Default | Description |
 |---------|------|---------|-------------|
-| `dot8assetmanager.rootPath` | `string` | `../3.resources` | Root folder to scan for assets, relative to the workspace. |
-| `dot8assetmanager.enableFeature` | `boolean` | `true` | Enable or disable asset processing. |
-| `dot8assetmanager.buildPath` | `string` | `build/` | Path where build artifacts are generated. |
+| `dot8assetmanager.ScanFolders` | `array` | `[]` | Array of folder paths to scan for assets. |
+| `dot8assetmanager.ScanExtensions` | `array` | `[]` | Array of file extensions to process (e.g., `.png`, `.tsx`, `.afb`). |
 
 Settings can be configured in **Workspace Settings** (`settings.json`).
 
@@ -106,8 +92,9 @@ Place an `action.metadata` JSON file in any asset directory to define processing
 
 ## Metadata file format
 
-Each asset gets a `.metadata` sidecar file next to it:
+Each asset gets a `.metadata` sidecar file containing metadata appropriate to the file type:
 
+### PNG / TSX files (enriched metadata)
 ```json
 {
   "GeneratedBy": "Dot8-MetadataUpdate-0.0.1",
@@ -119,6 +106,21 @@ Each asset gets a `.metadata` sidecar file next to it:
   "Height": 16,
   "Columns": 4,
   "Rows": 8
+}
+```
+
+### Other formats (basic metadata)
+```json
+{
+  "GeneratedBy": "Dot8-MetadataUpdate-0.0.1",
+  "Enabled": true,
+  "Name": "animation",
+  "Path": "C:/assets/animation.afb",
+  "Modified": "2026-01-01T00:00:00.000Z",
+  "Width": 0,
+  "Height": 0,
+  "Columns": 0,
+  "Rows": 0
 }
 ```
 
@@ -136,19 +138,7 @@ Each asset gets a `.metadata` sidecar file next to it:
 ### 0.0.1
 
 - Initial release.
-- Asset scanning with new/modified file detection.
-- Metadata generation for `.png`, `.tsx`, `.afb`, `.pt3`, `.json.gpl` files.
-- Tileset parsing from `.tsx` files via `fast-xml-parser`.
-- Action pipeline execution with metadata placeholder substitution.
-- First-run setup wizard and live config reload.
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+- Added command `dot8assetmanager.updateChangedAssets` to process changed assets only.
+- Added command `dot8assetmanager.updateAllAssets` to process all assets.
+- Added metadata sidecar generation for supported asset files.
+- Added `.tsx` tileset parsing and metadata interpolation for action pipelines.

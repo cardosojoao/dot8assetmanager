@@ -5,6 +5,10 @@ import { IFileItem } from '../models/IFileItem';
 import { outputChannel } from '../extension';
 import { changeExtension } from '../utils/utils';
 
+/**
+ * Scans configured folders and returns matching files with normalized metadata
+ * used by the processing pipeline.
+ */
 export async function getFiles(scanFolders: string[], extensions: string[] = []): Promise<IFileItem[]> {
     let allFiles: IFileItem[] = [];
     try {
@@ -18,16 +22,16 @@ export async function getFiles(scanFolders: string[], extensions: string[] = [])
         //outputChannel.appendLine(`[FILES] Scanning workspace: ${workspaceRoot}`);
 
         for (const folder of scanFolders) {
-            outputChannel.appendLine(`[FILES] Configured scan folder: ${folder}`);
+            //outputChannel.appendLine(`[FILES] Configured scan folder: ${folder}`);
             const targetFolder = path.resolve(workspaceRoot, '..', folder);
-            outputChannel.appendLine(`[FILES] Target folder: ${targetFolder}`);
+            //outputChannel.appendLine(`[FILES] Target folder: ${targetFolder}`);
 
             const pattern = new vscode.RelativePattern(targetFolder, `**/*.{${extensions.join(',')}}`);
             const files = await vscode.workspace.findFiles(
                 pattern, '**/*.{metadata,cmd,ini}'
             );
 
-            outputChannel.appendLine(`[FILES] Found ${files.length} files matching pattern`);
+            //outputChannel.appendLine(`[FILES] Found ${files.length} files matching pattern`);
 
             allFiles = allFiles.concat(files.map(file => {
                 try {
@@ -53,9 +57,13 @@ export async function getFiles(scanFolders: string[], extensions: string[] = [])
     return allFiles;
 }
 
+/**
+ * Reads metadata sidecar files for the provided source files and returns only
+ * metadata entries that exist and can be parsed successfully.
+ */
 export async function getMetadataFiles(files: IFileItem[]): Promise<IFileItem[]> {
     const items: IFileItem[] = [];
-    outputChannel.appendLine(`[METADATA] Processing ${files.length} files for metadata`);
+    //outputChannel.appendLine(`[METADATA] Processing ${files.length} files for metadata`);
 
     for (const fileData of files) {
         try {
@@ -76,6 +84,6 @@ export async function getMetadataFiles(files: IFileItem[]): Promise<IFileItem[]>
         }
     }
 
-    outputChannel.appendLine(`[METADATA] Loaded metadata for ${items.length}/${files.length} files`);
+    //outputChannel.appendLine(`[METADATA] Loaded metadata for ${items.length}/${files.length} files`);
     return items;
 }

@@ -6,6 +6,10 @@ import { outputChannel } from '../extension';
 import { saveMetadata, getMetadata, updateMetadataType } from './metaData';
 import { Action } from '../models/action';
 
+/**
+ * Resolves the closest action metadata file for a folder and returns a parsed
+ * Action model when available.
+ */
 export async function getActionMetadata(folder: string): Promise<Action | null> {
     try {
         const actionPath = findFileUpward(folder, 'action.metadata');
@@ -21,6 +25,10 @@ export async function getActionMetadata(folder: string): Promise<Action | null> 
     return null;
 }
 
+/**
+ * Executes all matching action steps for a file and updates the file metadata
+ * modified timestamp only when every step succeeds.
+ */
 export async function executeAction(action: Action, file: IFileItem): Promise<void> {
 
     try {
@@ -38,8 +46,6 @@ export async function executeAction(action: Action, file: IFileItem): Promise<vo
             try {
                 const args = step.args.map(arg => argumentApplyMetadata(arg, metaDataDict));
                 const fullCommand = `${step.command} ${args.join(' ')}`;
-                //outputChannel.appendLine(`[STEP] Command: ${fullCommand}`);
-
                 const stepSuccess = ExecuteFile(step.command, args.join(' '));
                 if (!stepSuccess) {
                     outputChannel.appendLine(`[STEP] ❌ Step failed: ${step.name}`);
@@ -57,7 +63,6 @@ export async function executeAction(action: Action, file: IFileItem): Promise<vo
         if (allStepsResult) {
             const now = new Date();
             const metadataPath = changeExtension(file.path, '.metadata');
-//            const metadata = await getMetadata(file.path);
             metaData.Modified = now.toISOString();
             saveMetadata(metaData, metadataPath);
             outputChannel.appendLine(`[ACTION] ✅  All steps completed, metadata updated at ${now.toISOString()}`);

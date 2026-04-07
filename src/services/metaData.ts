@@ -8,6 +8,10 @@ import { IFileItem } from '../models/IFileItem';
 
 const GENERATED_BY = `Dot8-MetadataUpdate-${version}`;
 
+/**
+ * Creates a metadata sidecar file for the target asset when one does not
+ * already exist.
+ */
 export function CreateMetadata(targetPath: string): void {
     const metadataPath = getMetadataFilePath(targetPath);
     if (!fs.existsSync(metadataPath)) {
@@ -23,6 +27,9 @@ export function CreateMetadata(targetPath: string): void {
 }
 
 
+/**
+ * Enriches metadata based on source file type.
+ */
 export function updateMetadataType(metadata: IMetadata, filePath: string): IMetadata {
     let update = metadata;
     switch (path.extname(filePath).toLowerCase()) {
@@ -44,14 +51,17 @@ export function updateMetadataType(metadata: IMetadata, filePath: string): IMeta
 
 
 
+/**
+ * Persists metadata JSON content to disk.
+ */
 export function saveMetadata(metadata: IMetadata, metadataPath: string): void {
     const json = JSON.stringify(metadata, null, 2);
     fs.writeFileSync(metadataPath, json, 'utf-8');
 }
 
-//
-// Update metadata for a tileset file.
-//
+/**
+ * Updates metadata fields for a tileset source file.
+ */
 function updateTileSet(metadata: IMetadata, filePath: string): IMetadata {
     const tileSet = readTileSet(filePath);
     const pathData = path.join(path.dirname(metadata.Path), tileSet.image.source);
@@ -65,9 +75,9 @@ function updateTileSet(metadata: IMetadata, filePath: string): IMetadata {
     return metadata;
 }
 
-//
-// Update metadata for a pattern file (e.g. .png).
-//
+/**
+ * Updates metadata fields for a pattern image source file.
+ */
 function updatePattern(metadata: IMetadata, filePath: string): IMetadata {
     //const metadataPath = getMetadataFilePath(metadata.Path);
 
@@ -76,9 +86,9 @@ function updatePattern(metadata: IMetadata, filePath: string): IMetadata {
     return metadata;
 }
 
-//
-// Update metadata for generic files (e.g. .afb, .pt3).
-//
+/**
+ * Updates metadata fields for generic file types.
+ */
 function updateGeneric(metadata: IMetadata, filePath: string): IMetadata {
     //const metadataPath = getMetadataFilePath(metadata.Path);
 
@@ -87,6 +97,9 @@ function updateGeneric(metadata: IMetadata, filePath: string): IMetadata {
     return metadata;
 }
 
+/**
+ * Loads and parses a metadata sidecar file for the provided asset path.
+ */
 export async function getMetadata(fileData: string): Promise<IMetadata> {
     const filePathMetadata = changeExtension(fileData, '.metadata');
     const raw = await fs.promises.readFile(filePathMetadata, 'utf-8');

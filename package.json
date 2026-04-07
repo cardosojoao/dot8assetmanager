@@ -34,58 +34,21 @@
           "default": [],
           "description": "File extensions to be scanned for assets.",
           "scope": "window"
-        },
-        "dot8assetmanager.enableFeature": {
-          "type": "boolean",
-          "default": true,
-          "description": "Enable the sample feature.",
-          "scope": "resource"
-        },
-        "dot8assetmanager.buildPath": {
-          "type": "string",
-          "default": "build/",
-          "description": "Path where build artifacts are generated."
         }
       }
     },
     "commands": [
       {
-        "command": "dot8assetmanager.scan",
-        "title": "scan for updates",
-        "category": "dot8assetmanager"
-
-      },
-      {
-        "command": "dot8assetmanager.apply",
-        "title": "apply actions",
-         "category": "dot8assetmanager"
-      },
-      {
-        "command": "dot8assetmanager.enable",
-        "title": "enable dot8 asset manager",
+        "command": "dot8assetmanager.updateChangedAssets",
+        "title": "Update Changed Assets",
         "category": "dot8assetmanager"
       },
       {
-        "command": "dot8assetmanager.disable",
-        "title": "disable dot8 asset manager",
-        "category": "dot8assetmanager"
-
-      },
-      {
-        "command": "dot8assetmanager.setup",
-        "title": "setup dot8 asset manager",
+        "command": "dot8assetmanager.updateAllAssets",
+        "title": "Update All Assets",
         "category": "dot8assetmanager"
       }
-    ],
-    "menus": {
-      "commandPalette": [
-        {
-          "command": "dot8assetmanager.scan",
-          "when": "true"
-        }
-      ]
-    }
-
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
@@ -108,6 +71,7 @@
     "typescript-eslint": "^8.56.1"
   },
   "dependencies": {
+    "@vscode/vsce": "^3.7.1",
     "fast-xml-parser": "^5.5.10",
     "vscode": "^1.1.37"
   }

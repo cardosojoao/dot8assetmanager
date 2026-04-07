@@ -1,5 +1,10 @@
 import * as vscode from 'vscode';
 import { reloadConfig } from './config';
+
+/**
+ * Runs first-time workspace setup flow and marks setup completion in workspace
+ * state.
+ */
 export async function setupCommand(context: vscode.ExtensionContext): Promise<boolean> {
 
     //     // ─── Step 1: Server URL ───────────────────────────────────────────────────

@@ -1,11 +1,15 @@
 import * as vscode from 'vscode';
 import { config, reloadConfig, saveConfig, watchConfig } from './config/config';
-import { registerScanCommand } from './commands/scan';
-import { registerApplyCommand } from './commands/Apply';
+import { registerScanCommand } from './commands/UpdateChanged';
+import { registerApplyCommand } from './commands/updateAll';
 
 export let outputChannel: vscode.OutputChannel;
 
 
+/**
+ * Activates the extension, loads configuration, creates output logging, and
+ * registers command handlers.
+ */
 export async function activate(context: vscode.ExtensionContext) {
 
     // const hasWorkspace = !!vscode.workspace.workspaceFolders?.length;
@@ -54,8 +58,8 @@ export async function activate(context: vscode.ExtensionContext) {
     //config.rootFolder = "test root folder";
     //await saveConfig(); // example of saving config programmatically
 
-    outputChannel.show(); // bring output window to front
-    outputChannel.appendLine("show config values:");
+    //outputChannel.show(); // bring output window to front
+    //outputChannel.appendLine("show config values:");
 
     // Use config anywhere
     //outputChannel.appendLine(config.scanFolders);
@@ -63,51 +67,16 @@ export async function activate(context: vscode.ExtensionContext) {
 
 
     outputChannel.appendLine("Extension activated");
-
-
-    // const config = vscode.workspace.getConfiguration("sampleExtension");
-
-    // const enabled = config.get<boolean>("enableFeature");
-    // const buildPath = config.get<string>("buildPath");
-
-    // console.log("Feature enabled:", enabled);
-    // console.log("Build path:", buildPath);
-
-    //getFiles('data');
+    outputChannel.appendLine("Current Settings:");
+    outputChannel.appendLine(`Scan Folders: ${config.scanFolders.join("\n\r")}`); 
+    outputChannel.appendLine(`Scan Extensions: ${config.scanExtensions.join("\n\r")}`); 
 
 
 }
 
-const disposableEnable = vscode.commands.registerCommand('dot8assetmanager.enable', async () => {
-
-    const config = vscode.workspace.getConfiguration("dot8assetmanager");
-
-    await config.update(
-        "enableFeature",
-        true,
-        vscode.ConfigurationTarget.Global
-    );
-
-    vscode.window.showInformationMessage("Feature enable");
-
-});
-
-const disposableDisable = vscode.commands.registerCommand('dot8assetmanager.disable', async () => {
-
-    const config = vscode.workspace.getConfiguration("dot8assetmanager");
-
-    await config.update(
-        "enableFeature",
-        false,
-        vscode.ConfigurationTarget.Global
-    );
-
-    vscode.window.showInformationMessage("Feature disabled");
-
-});
-
-
-
+/**
+ * Disposes extension resources when VS Code unloads the extension.
+ */
 export function deactivate() {
     if (outputChannel) {
         outputChannel.dispose();

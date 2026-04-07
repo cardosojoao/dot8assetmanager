@@ -4,6 +4,10 @@ import { IFileItem } from "../models/IFileItem";
 import * as Path from "path";
 import { executeAction, getActionMetadata } from "./actionExecute";
 
+/**
+ * Groups files by folder, resolves the nearest action metadata, and executes
+ * action steps for each file in that folder.
+ */
 export async function ProcessFiles(files: IFileItem[]): Promise<void> {
     const grouped = files.reduce((acc, file) => {
         const folder = Path.dirname(file.filter);

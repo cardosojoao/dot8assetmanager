@@ -1,16 +1,22 @@
 import * as vscode from 'vscode';
 import { CreateMetadata } from '../services/metaData';
-import { executeAction, getActionMetadata } from '../services/actionExecute';
+//import { executeAction, getActionMetadata } from '../services/actionExecute';
 import { IFileItem } from '../models/IFileItem';
 import { config } from '../config/config';
 import { outputChannel } from '../extension';
 import { getFiles, getMetadataFiles, } from '../services/files';
-import * as Path from 'path';
-import { Action } from '../models/action';
+//import * as Path from 'path';
+//import { Action } from '../models/action';
 import { ProcessFiles } from '../services/ProcessFile';
 
+/**
+ * Registers the apply command that scans configured asset folders, creates
+ * missing metadata, and executes action steps for discovered files.
+ *
+ * Command id: `dot8assetmanager.apply`
+ */
 export function registerApplyCommand(context: vscode.ExtensionContext) {
-    const disposable = vscode.commands.registerCommand('dot8assetmanager.apply',
+    const disposable = vscode.commands.registerCommand('dot8assetmanager.updateAllAssets',
         async () => {
             try {
 
@@ -30,7 +36,7 @@ export function registerApplyCommand(context: vscode.ExtensionContext) {
                 outputChannel.appendLine(`[SCAN] ${unmatched.length} unmatched files (need new metadata)`);
 
                 // get modified items
-                outputChannel.appendLine(`[SCAN] ${files.length} updated files `);
+                outputChannel.appendLine(`[SCAN] ${files.length} updated files (process actions)`);
 
                 // create metadata for unmatched items
                 for (const fileData of unmatched) {
@@ -60,5 +66,3 @@ export function registerApplyCommand(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(disposable);
 }
-
-

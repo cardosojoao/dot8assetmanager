@@ -7,6 +7,9 @@ import { Dot8AssetManagerConfig } from './dot8assetmanagerConfig';
 // Global config instance
 export let config: Dot8AssetManagerConfig = loadConfig();
 
+/**
+ * Loads extension settings from the current workspace configuration.
+ */
 function loadConfig(): Dot8AssetManagerConfig {
     const cfg = vscode.workspace.getConfiguration('dot8assetmanager');
 
@@ -19,12 +22,17 @@ function loadConfig(): Dot8AssetManagerConfig {
     };
 }
 
-// Call this to reload config (e.g. when settings change)
+/**
+ * Reloads the in-memory configuration from VS Code settings.
+ */
 export function reloadConfig(): void {
     config = loadConfig();
 }
 
-// Call this in your extension.ts activate()
+/**
+ * Subscribes to configuration changes and refreshes config when relevant
+ * extension settings are updated.
+ */
 export function watchConfig(context: vscode.ExtensionContext): void {
     context.subscriptions.push(
         vscode.workspace.onDidChangeConfiguration(e => {
@@ -36,6 +44,9 @@ export function watchConfig(context: vscode.ExtensionContext): void {
 }
 
 
+/**
+ * Persists the current in-memory configuration to workspace-folder settings.
+ */
 export async function saveConfig():Promise<void> {
     const cfg = vscode.workspace.getConfiguration(
         'dot8assetmanager',

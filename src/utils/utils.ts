@@ -4,12 +4,18 @@ import { IMetadata } from "../models/IMetadata";
 import { outputChannel } from "../extension";
 import { execSync } from "child_process";
 
+/**
+ * Returns a file path with the same base name and a different extension.
+ */
 export function changeExtension(filePath: string, newExt: string): string {
     const dir = path.dirname(filePath);
     const base = path.basename(filePath, path.extname(filePath));
     return path.join(dir, `${base}${newExt}`);
 }
 
+/**
+ * Searches for a file from the starting location up through parent directories.
+ */
 export const findFileUpward = (startPath: string, fileName: string): string | null => {
     let current = fs.statSync(startPath).isFile() ? path.dirname(path.resolve(startPath)) : path.resolve(startPath);
     while (true) {
@@ -21,6 +27,9 @@ export const findFileUpward = (startPath: string, fileName: string): string | nu
     }
 };
 
+/**
+ * Maps metadata fields to string placeholders used by action arguments.
+ */
 export function mapMetadataToDictionary(metadata: IMetadata): Record<string, string> {
     const dictionary: Record<string, string> = {};
 
@@ -41,12 +50,19 @@ export function mapMetadataToDictionary(metadata: IMetadata): Record<string, str
 }
 
 
+/**
+ * Replaces placeholder tokens in a command argument with metadata values.
+ */
 export function argumentApplyMetadata(argument: string, dictionary: Record<string, string>): string {
     return Object.entries(dictionary).reduce((result, [key, value]) => {
         return result.replaceAll(`\${${key}}`, value);
     }, argument);
 }
 
+/**
+ * Executes an external command and logs process output to the extension output
+ * channel.
+ */
 export const ExecuteFile = (filePath: string, parameters: string): boolean => {
     const cmd = `${filePath} ${parameters}`;
     try {
@@ -66,6 +82,9 @@ export const ExecuteFile = (filePath: string, parameters: string): boolean => {
     }
 };
 
+/**
+ * Resolves the metadata sidecar path for an asset file path.
+ */
 export function getMetadataFilePath(inputPath: string): string {
     return changeExtension(inputPath, '.metadata');
 }
