@@ -3,7 +3,13 @@ import fs from 'fs';
 import path from 'path';
 import { IFileItem } from '../models/IFileItem';
 import { outputChannel } from '../extension';
-import { changeExtension } from '../utils/utils';
+import { appendExtension, changeExtension } from '../utils/utils';
+
+export interface IFileChangeEvent extends IFileItem {
+    changeType: 'created' | 'changed' | 'deleted';
+}
+
+export const fileChanges: IFileChangeEvent[] = [];
 
 /**
  * Scans configured folders and returns matching files with normalized metadata
@@ -67,7 +73,8 @@ export async function getMetadataFiles(files: IFileItem[]): Promise<IFileItem[]>
 
     for (const fileData of files) {
         try {
-            const fileMetadata = changeExtension(fileData.path, '.metadata');
+            //const fileMetadata = changeExtension(fileData.path, '.metadata');
+            const fileMetadata = appendExtension(fileData.path, '.metadata');
             if (fs.existsSync(fileMetadata)) {
                 const raw = await fs.promises.readFile(fileMetadata, 'utf-8');
                 const parsed = JSON.parse(raw);
@@ -86,4 +93,73 @@ export async function getMetadataFiles(files: IFileItem[]): Promise<IFileItem[]>
 
     //outputChannel.appendLine(`[METADATA] Loaded metadata for ${items.length}/${files.length} files`);
     return items;
+}
+
+/**
+ * Watches multiple folders and appends file-system change events to the
+ * provided collection.
+ */
+export function watchFoldersAndCollectChanges(
+    scanFolders: string[],
+    extensions: string[]
+): vscode.Disposable {
+    const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    if (!workspaceRoot) {
+        outputChannel.appendLine('[WATCH] ❌ Error: No workspace folder open!');
+        throw new Error('No workspace folder open!');
+    }
+
+    const normalizedExtensions = new Set(
+        extensions
+            .map((ext) => ext.trim().toLowerCase())
+            .filter((ext) => ext.length > 0)
+            .map((ext) => (ext.startsWith('.') ? ext : `.${ext}`))
+    );
+
+    const watchers: vscode.FileSystemWatcher[] = [];
+
+    const addChange = (uri: vscode.Uri, changeType: IFileChangeEvent['changeType']) => {
+        const fileExt = path.extname(uri.fsPath).toLowerCase();
+        // if (normalizedExtensions.size > 0 && !normalizedExtensions.has(fileExt)) {
+        //     return;
+        // }
+
+        let modified = new Date();
+        if (changeType !== 'deleted') {
+            try {
+                modified = fs.statSync(uri.fsPath).mtime;
+            } catch {
+                // If the file is in flux, keep current time as fallback.
+            }
+        }
+
+        const filePath = uri.fsPath;
+        fileChanges.push({
+            path: filePath,
+            modified,
+            filter: path.join(path.dirname(filePath), path.basename(filePath, path.extname(filePath))).toLowerCase(),
+            changeType
+        });
+        outputChannel.appendLine(`[WATCH] ${changeType.toUpperCase()}: ${filePath}`);
+    };
+
+    for (const folder of scanFolders) {
+        const targetFolder = path.resolve(workspaceRoot, '..', folder);
+        //const pattern = new vscode.RelativePattern(targetFolder, `**/*.{${extensions.join(',')}}`);
+        const pattern = new vscode.RelativePattern(targetFolder, `**/*`);
+        const watcher = vscode.workspace.createFileSystemWatcher(pattern);
+
+        watcher.onDidCreate((uri) => addChange(uri, 'created'));
+        watcher.onDidChange((uri) => addChange(uri, 'changed'));
+        watcher.onDidDelete((uri) => addChange(uri, 'deleted'));
+
+        watchers.push(watcher);
+        outputChannel.appendLine(`[WATCH] Monitoring folder: ${targetFolder}`);
+    }
+
+    return new vscode.Disposable(() => {
+        for (const watcher of watchers) {
+            watcher.dispose();
+        }
+    });
 }

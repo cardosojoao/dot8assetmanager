@@ -1,6 +1,7 @@
 export interface IStep {
     name: string;
     command: string;
+    workingDirectory?: string;
     args: string[];
 }
 
@@ -12,6 +13,7 @@ export interface IActionFile {
     name: string;
     description?: string;
     steps: IStep[];
+    extensionOrder: string[]; // defines the order of extensions to process, e.g. ["png", "nxp", "default"]
     byExtension: {
         [extension: string]: IExtensionSteps;  // handles ".ts", ".py", etc.
         default: IExtensionSteps;              // fallback

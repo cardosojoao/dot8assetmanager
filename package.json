@@ -67,12 +67,12 @@
     "@vscode/test-cli": "^0.0.11",
     "@vscode/test-electron": "^2.5.2",
     "eslint": "^9.39.3",
+    "vscode": "^1.1.37",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.56.1"
   },
   "dependencies": {
     "@vscode/vsce": "^3.7.1",
-    "fast-xml-parser": "^5.5.10",
-    "vscode": "^1.1.37"
+    "fast-xml-parser": "^5.5.10"
   }
 }

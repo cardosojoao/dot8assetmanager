@@ -13,6 +13,10 @@ export function changeExtension(filePath: string, newExt: string): string {
     return path.join(dir, `${base}${newExt}`);
 }
 
+export function appendExtension(filePath: string, newExt: string): string {
+    return path.join(filePath,newExt);
+}
+
 /**
  * Searches for a file from the starting location up through parent directories.
  */
@@ -45,7 +49,7 @@ export function mapMetadataToDictionary(metadata: IMetadata): Record<string, str
     dictionary['width'] = String(metadata.Width * metadata.Columns);
     dictionary['height'] = String(metadata.Height * metadata.Rows);
     dictionary['filewithoutextension'] = changeExtension(metadata.Path, '');
-    dictionary['directory'] = path.dirname(metadata.Path);
+    dictionary['directory'] = path.dirname(metadata.Path);          // this could be an issue, the default directory should be taken from the trigger file
     return dictionary;
 }
 
@@ -63,12 +67,13 @@ export function argumentApplyMetadata(argument: string, dictionary: Record<strin
  * Executes an external command and logs process output to the extension output
  * channel.
  */
-export const ExecuteFile = (filePath: string, parameters: string): boolean => {
+export const ExecuteFile = (filePath: string, parameters: string, workingDirectory: string = ''): boolean => {
     const cmd = `${filePath} ${parameters}`;
     try {
         outputChannel.appendLine(`[EXEC] Running: ${cmd}`);
         const output = execSync(cmd, {
             encoding: 'utf-8',
+            cwd: workingDirectory,
             stdio: ['pipe', 'pipe', 'pipe']
         });
         outputChannel.appendLine(`[EXEC] Output: ${output.trim()}`);

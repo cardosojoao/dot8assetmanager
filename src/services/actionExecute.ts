@@ -5,6 +5,7 @@ import { changeExtension, findFileUpward, mapMetadataToDictionary, argumentApply
 import { outputChannel } from '../extension';
 import { saveMetadata, getMetadata, updateMetadataType } from './metaData';
 import { Action } from '../models/action';
+import path from 'path';
 
 /**
  * Resolves the closest action metadata file for a folder and returns a parsed
@@ -39,14 +40,16 @@ export async function executeAction(action: Action, file: IFileItem): Promise<vo
         metaData = updateMetadataType(metaData,file.path) as IMetadata;
         //saveMetadata(metaData,getMetadataFilePath(metaData.Path));
         const metaDataDict = mapMetadataToDictionary(metaData as IMetadata);
+        metaDataDict['trigger'] = file.path;
         let allStepsResult: boolean = true;
 
         for (const step of steps) {
             outputChannel.appendLine(`[STEP] Executing: ${step.name}`);
             try {
                 const args = step.args.map(arg => argumentApplyMetadata(arg, metaDataDict));
+                const workingDir = step.workingDirectory ? argumentApplyMetadata(step.workingDirectory, metaDataDict) : '';
                 const fullCommand = `${step.command} ${args.join(' ')}`;
-                const stepSuccess = ExecuteFile(step.command, args.join(' '));
+                const stepSuccess = ExecuteFile(step.command, args.join(' '), workingDir);
                 if (!stepSuccess) {
                     outputChannel.appendLine(`[STEP] ❌ Step failed: ${step.name}`);
                     allStepsResult = false;

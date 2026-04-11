@@ -23,9 +23,31 @@ export async function ProcessFiles(files: IFileItem[]): Promise<void> {
         if (action === null) {
             continue;
         }
-        for (const file of grouped[folder]) {
+        // get unique extensions in the folder, sort by action.extensionOrder, then process files in that order (files with extensions not in action.extensionOrder will be processed last)
+        const uniqueExtensions = Array.from(
+            new Set(
+                grouped[folder]
+                    .map(file => {
+                        const idx = file.path.lastIndexOf('.');
+                        return idx >= 0 ? file.path.slice(idx+1) : ''; // extension or empty string
+                    })
+                    .filter(ext => ext) // skip files with no extension, remove if you want to keep them
+            )
+        );
+        // merget action order extension and add existing extensions in folder, to ensure we process files in the order defined by action.extensionOrder, but also include any extensions that are present in the folder but not defined in action.extensionOrder (these will be processed last)
+        const processeExtensions = Array.from(new Set([...action.extensionOrder, ...uniqueExtensions]));
+
+        const orderedFiles: IFileItem[] = [];
+        processeExtensions.forEach(ext => {
+            orderedFiles.push(
+                ...grouped[folder].filter(file => file.path.endsWith(ext))
+            );
+        });
+
+        for (const file of orderedFiles) {
             outputChannel.appendLine(`[ACTION] Processing file: ${file?.path}`);
             try {
+            
                 await executeAction(<Action>action, <IFileItem>file);
             } catch (error) {
                 outputChannel.appendLine(`[ERROR] ❌ Failed to process file ${file?.path}: ${error}`);
