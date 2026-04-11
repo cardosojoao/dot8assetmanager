@@ -1,9 +1,9 @@
 import { IFileItem } from '../models/IFileItem';
 import { IMetadata } from '../models/IMetadata';
-import { appendExtension, ExecuteFile, getMetadataFilePath } from '../utils/utils';
+import { appendExtension, ExecuteFile, fileExists, getMetadataFilePath, isLikelyFileName } from '../utils/utils';
 import { changeExtension, findFileUpward, mapMetadataToDictionary, argumentApplyMetadata } from '../utils/utils';
 import { outputChannel } from '../extension';
-import { saveMetadata, getMetadata, updateMetadataType } from './metaData';
+import { saveMetadata, getMetadata, updateMetadataType, getMetadataGeneric } from './metaData';
 import { Action } from '../models/action';
 import path from 'path';
 import * as vscode from 'vscode';
@@ -38,37 +38,45 @@ export async function executeAction(action: Action, file: IFileItem): Promise<vo
         outputChannel.appendLine(`[ACTION] Found ${steps.length} steps to execute`);
 
         let metaData = await getMetadata(file.path);
-        metaData = updateMetadataType(metaData,file.path) as IMetadata;
+        metaData = updateMetadataType(metaData, file.path) as IMetadata;
         //saveMetadata(metaData,getMetadataFilePath(metaData.Path));
-        const metaDataDict: Record<string,string> = {};
+        const metaDataDict: Record<string, string> = {};
         mapMetadataToDictionary(metaDataDict, metaData as IMetadata);
         metaDataDict['trigger'] = file.path;
         let allStepsResult: boolean = true;
 
+
+
         for (const step of steps) {
             outputChannel.appendLine(`[STEP] Executing: ${step.name}`);
-            const metadataDictStep : Record<string, string> = {};
-            
-            if (step.metadata !== undefined &&   step.metadata.length > 0)
-            {
-                for( const metadataSource of step.metadata)
-                {
-                    if (metadataSource[0] === '.')
-                    {
+            const metadataDictStep: Record<string, string> = {};
+
+            if (step.metadata !== undefined && step.metadata.length > 0) {
+                for (const metadataSource of step.metadata) {
+                    // standard metadata file
+                    if (metadataSource[0] === '.') {
                         const metadataStepPath = changeExtension(file.path, metadataSource);
-                        let metaDataStep = await getMetadata( metadataStepPath);
-                        metaData = updateMetadataType(metaData,metadataStepPath) as IMetadata;
-                        mapMetadataToDictionary(metadataDictStep, metaData as IMetadata);                    
+                        let metaDataStep = await getMetadata(metadataStepPath);
+                        metaData = updateMetadataType(metaData, metadataStepPath) as IMetadata;
+                        mapMetadataToDictionary(metadataDictStep, metaData as IMetadata);
                     }
-                    else if( await vscode.Uri.file(metadataSource).scheme )
-                    {
+                    // generic metadata file consumed as key value pair
+                    else {
+                        let pathSource = metadataSource;
+                        if (isLikelyFileName(metadataSource)) {
+                            pathSource = path.join(path.dirname(file.path), metadataSource);
+                        }
 
+                        if (await fileExists(pathSource)) {
+                            const ext = await getMetadataGeneric(pathSource);
+                            // merge content with  current dictionary
+                            for (const key in ext) {
+                                if (!(key in metadataDictStep)) {
+                                    metadataDictStep[key] = String(ext[key]);
+                                }
+                            }
+                        }
                     }
-
-                    //const metadataStepPath = changeExtension(file.path, "."+extension);
-                    //let metaDataStep = await getMetadata( metadataStepPath);
-                    //metaData = updateMetadataType(metaData,metadataStepPath) as IMetadata;
-                    //mapMetadataToDictionary(metadataDictStep, metaData as IMetadata);
                 }
             }
 

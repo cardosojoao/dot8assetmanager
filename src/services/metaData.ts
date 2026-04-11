@@ -21,7 +21,7 @@ export function CreateMetadata(targetPath: string): void {
             Modified: modified.toISOString(),
             Path: targetPath,
         } as IMetadata;
-        const update = updateMetadataType(metadata,targetPath);
+        const update = updateMetadataType(metadata, targetPath);
         saveMetadata(update, metadataPath);
     }
 }
@@ -37,11 +37,11 @@ export function updateMetadataType(metadata: IMetadata, filePath: string): IMeta
             update = updateTileSet(metadata, filePath);
             break;
         case '.png':
-            update = updatePattern(metadata,filePath);
+            update = updatePattern(metadata, filePath);
             break;
         case '.afb':
         case '.pt3':
-            update = updateGeneric(metadata,filePath);
+            update = updateGeneric(metadata, filePath);
             break;
         default:
             break;
@@ -104,5 +104,12 @@ export async function getMetadata(fileData: string): Promise<IMetadata> {
     const filePathMetadata = appendExtension(fileData, 'metadata');
     const raw = await fs.promises.readFile(filePathMetadata, 'utf-8');
     const parsed = JSON.parse(raw) as IMetadata;
+    return parsed;
+}
+
+
+export async function getMetadataGeneric(fileData: string): Promise<Record<string, string>> {
+    const raw = await fs.promises.readFile(fileData, 'utf-8');
+    const parsed  = JSON.parse(raw) as Record<string, string>;
     return parsed;
 }

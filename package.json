@@ -68,8 +68,7 @@
     "@vscode/test-electron": "^2.5.2",
     "eslint": "^9.39.3",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.56.1",
-    "vscode": "^1.1.37"
+    "typescript-eslint": "^8.56.1"
   },
   "dependencies": {
     "@vscode/vsce": "^3.7.1",

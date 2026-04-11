@@ -178,11 +178,32 @@ export function getMetadataFilePath(inputPath: string): string {
     return appendExtension(inputPath, 'metadata');
 }
 
-async function fileExists(uri: vscode.Uri): Promise<boolean> {
-    try {
-        await vscode.workspace.fs.stat(uri);
-        return true;
-    } catch {
-        return false;
+export async function fileExists(file: string): Promise<boolean> {
+    return fs.existsSync(file);
+}
+
+export function mergeNoDuplicateKeys(
+  a: Record<string, string>,
+  b: Record<string, string>
+): Record<string, string> {
+  const result = { ...a };
+
+  for (const key in b) {
+    if (!(key in result)) {
+      result[key] = b[key];
     }
+  }
+
+  return result;
+}
+
+
+
+
+export function isLikelyFileName(input: string): boolean {
+    return path.basename(input) === input;
+}
+
+export function isLikelyFilePath(input: string): boolean {
+    return path.dirname(input) !== '.';
 }
