@@ -112,8 +112,10 @@ suite('utils.findFileUpward', () => {
 
 suite('utils.mapMetadataToDictionary', () => {
     test('maps all expected keys', () => {
+
+        const dict : Record<string, string> = {};
         const md = makeMetadata({ Path: '/assets/sprite.png', Width: 16, Height: 16, Columns: 4, Rows: 3 });
-        const dict = mapMetadataToDictionary(md);
+        mapMetadataToDictionary(dict,md);
 
         assert.strictEqual(dict['cellwidth'], '16');
         assert.strictEqual(dict['cellheight'], '16');
@@ -127,8 +129,9 @@ suite('utils.mapMetadataToDictionary', () => {
     });
 
     test('directory key is the dirname of Path', () => {
+        const dict : Record<string, string> = {};
         const md = makeMetadata({ Path: '/assets/sub/sprite.png' });
-        const dict = mapMetadataToDictionary(md);
+        mapMetadataToDictionary(dict, md);
         assert.strictEqual(dict['directory'], path.dirname('/assets/sub/sprite.png'));
     });
 });

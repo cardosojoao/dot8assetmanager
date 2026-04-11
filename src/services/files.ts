@@ -28,17 +28,11 @@ export async function getFiles(scanFolders: string[], extensions: string[] = [])
         //outputChannel.appendLine(`[FILES] Scanning workspace: ${workspaceRoot}`);
 
         for (const folder of scanFolders) {
-            //outputChannel.appendLine(`[FILES] Configured scan folder: ${folder}`);
             const targetFolder = path.resolve(workspaceRoot, '..', folder);
-            //outputChannel.appendLine(`[FILES] Target folder: ${targetFolder}`);
-
             const pattern = new vscode.RelativePattern(targetFolder, `**/*.{${extensions.join(',')}}`);
             const files = await vscode.workspace.findFiles(
                 pattern, '**/*.{metadata,cmd,ini}'
             );
-
-            //outputChannel.appendLine(`[FILES] Found ${files.length} files matching pattern`);
-
             allFiles = allFiles.concat(files.map(file => {
                 try {
                     const stat = fs.statSync(file.fsPath);
@@ -47,7 +41,8 @@ export async function getFiles(scanFolders: string[], extensions: string[] = [])
                     return {
                         path: pathFile,
                         modified: stat.mtime,
-                        filter: path.join(path.dirname(pathFile), path.basename(pathFile, path.extname(pathFile))).toLowerCase()
+                        filter: pathFile            // for the files the filter is the same
+                        //filter: path.join(path.dirname(pathFile), path.basename(pathFile, path.extname(pathFile))).toLowerCase()
                     };
                 } catch (error) {
                     outputChannel.appendLine(`[FILES] ⚠️ Warning: Failed to stat ${file.fsPath}: ${error instanceof Error ? error.message : String(error)}`);
@@ -74,14 +69,15 @@ export async function getMetadataFiles(files: IFileItem[]): Promise<IFileItem[]>
     for (const fileData of files) {
         try {
             //const fileMetadata = changeExtension(fileData.path, '.metadata');
-            const fileMetadata = appendExtension(fileData.path, '.metadata');
+            const fileMetadata = appendExtension(fileData.path, 'metadata');
             if (fs.existsSync(fileMetadata)) {
                 const raw = await fs.promises.readFile(fileMetadata, 'utf-8');
                 const parsed = JSON.parse(raw);
                 items.push({
                     path: parsed.Path,
                     modified: new Date(parsed.Modified),
-                    filter: path.join(path.dirname(parsed.Path), path.basename(parsed.Path, path.extname(parsed.Path))).toLowerCase()
+                    filter: fileData.path
+                    //filter: path.join(path.dirname(parsed.Path), path.basename(parsed.Path, path.extname(parsed.Path))).toLowerCase()
                 });
             } else {
                 outputChannel.appendLine(`[METADATA] No metadata file for: ${fileData.path}`);
@@ -120,9 +116,9 @@ export function watchFoldersAndCollectChanges(
 
     const addChange = (uri: vscode.Uri, changeType: IFileChangeEvent['changeType']) => {
         const fileExt = path.extname(uri.fsPath).toLowerCase();
-        // if (normalizedExtensions.size > 0 && !normalizedExtensions.has(fileExt)) {
-        //     return;
-        // }
+        if (normalizedExtensions.size > 0 && !normalizedExtensions.has(fileExt)) {
+            return;
+        }
 
         let modified = new Date();
         if (changeType !== 'deleted') {
@@ -147,7 +143,7 @@ export function watchFoldersAndCollectChanges(
         const targetFolder = path.resolve(workspaceRoot, '..', folder);
         //const pattern = new vscode.RelativePattern(targetFolder, `**/*.{${extensions.join(',')}}`);
         const pattern = new vscode.RelativePattern(targetFolder, `**/*`);
-        const watcher = vscode.workspace.createFileSystemWatcher(pattern);
+        const watcher = vscode.workspace.createFileSystemWatcher(pattern, false, false, false);
 
         watcher.onDidCreate((uri) => addChange(uri, 'created'));
         watcher.onDidChange((uri) => addChange(uri, 'changed'));

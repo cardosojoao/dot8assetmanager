@@ -1,5 +1,6 @@
 export interface IStep {
     name: string;
+    metadata: string[];
     command: string;
     workingDirectory?: string;
     args: string[];

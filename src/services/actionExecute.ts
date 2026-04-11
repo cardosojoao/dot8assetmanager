@@ -1,11 +1,12 @@
 import { IFileItem } from '../models/IFileItem';
 import { IMetadata } from '../models/IMetadata';
-import { ExecuteFile, getMetadataFilePath } from '../utils/utils';
+import { appendExtension, ExecuteFile, getMetadataFilePath } from '../utils/utils';
 import { changeExtension, findFileUpward, mapMetadataToDictionary, argumentApplyMetadata } from '../utils/utils';
 import { outputChannel } from '../extension';
 import { saveMetadata, getMetadata, updateMetadataType } from './metaData';
 import { Action } from '../models/action';
 import path from 'path';
+import * as vscode from 'vscode';
 
 /**
  * Resolves the closest action metadata file for a folder and returns a parsed
@@ -39,14 +40,42 @@ export async function executeAction(action: Action, file: IFileItem): Promise<vo
         let metaData = await getMetadata(file.path);
         metaData = updateMetadataType(metaData,file.path) as IMetadata;
         //saveMetadata(metaData,getMetadataFilePath(metaData.Path));
-        const metaDataDict = mapMetadataToDictionary(metaData as IMetadata);
+        const metaDataDict: Record<string,string> = {};
+        mapMetadataToDictionary(metaDataDict, metaData as IMetadata);
         metaDataDict['trigger'] = file.path;
         let allStepsResult: boolean = true;
 
         for (const step of steps) {
             outputChannel.appendLine(`[STEP] Executing: ${step.name}`);
+            const metadataDictStep : Record<string, string> = {};
+            
+            if (step.metadata !== undefined &&   step.metadata.length > 0)
+            {
+                for( const metadataSource of step.metadata)
+                {
+                    if (metadataSource[0] === '.')
+                    {
+                        const metadataStepPath = changeExtension(file.path, metadataSource);
+                        let metaDataStep = await getMetadata( metadataStepPath);
+                        metaData = updateMetadataType(metaData,metadataStepPath) as IMetadata;
+                        mapMetadataToDictionary(metadataDictStep, metaData as IMetadata);                    
+                    }
+                    else if( await vscode.Uri.file(metadataSource).scheme )
+                    {
+
+                    }
+
+                    //const metadataStepPath = changeExtension(file.path, "."+extension);
+                    //let metaDataStep = await getMetadata( metadataStepPath);
+                    //metaData = updateMetadataType(metaData,metadataStepPath) as IMetadata;
+                    //mapMetadataToDictionary(metadataDictStep, metaData as IMetadata);
+                }
+            }
+
             try {
-                const args = step.args.map(arg => argumentApplyMetadata(arg, metaDataDict));
+                const args = step.args.map(arg => argumentApplyMetadata(arg, metaDataDict)).map(arg => argumentApplyMetadata(arg, metadataDictStep));
+                //const args = step.args.map(arg => argumentApplyMetadata(arg, metaDataDict));
+
                 const workingDir = step.workingDirectory ? argumentApplyMetadata(step.workingDirectory, metaDataDict) : '';
                 const fullCommand = `${step.command} ${args.join(' ')}`;
                 const stepSuccess = ExecuteFile(step.command, args.join(' '), workingDir);
@@ -65,7 +94,7 @@ export async function executeAction(action: Action, file: IFileItem): Promise<vo
 
         if (allStepsResult) {
             const now = new Date();
-            const metadataPath = changeExtension(file.path, '.metadata');
+            const metadataPath = appendExtension(file.path, 'metadata');
             metaData.Modified = now.toISOString();
             saveMetadata(metaData, metadataPath);
             outputChannel.appendLine(`[ACTION] ✅  All steps completed, metadata updated at ${now.toISOString()}`);

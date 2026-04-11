@@ -61,6 +61,7 @@ export function registerScanCommand(context: vscode.ExtensionContext) {
                     // check if new or uppdate files were part of the iniitial scan and remove them from the change list to avoid double processing
                     const updateFiles = fileChanges.filter((a: IFileChangeEvent) =>
                         !updated.some((b: IFileItem) => b.path === a.path));
+                    
                     fileChanges.splice(0, fileChanges.length);
                     vscode.window.showInformationMessage(`Scan Pass ${pass} complete: ${unmatched.length} new, ${files.length} updated`);
 

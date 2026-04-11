@@ -3,7 +3,7 @@ import fs from "fs";
 import { IMetadata } from "../models/IMetadata";
 import { outputChannel } from "../extension";
 import { execSync } from "child_process";
-
+import * as vscode from 'vscode';
 /**
  * Returns a file path with the same base name and a different extension.
  */
@@ -14,7 +14,7 @@ export function changeExtension(filePath: string, newExt: string): string {
 }
 
 export function appendExtension(filePath: string, newExt: string): string {
-    return path.join(filePath,newExt);
+    return filePath +"." + newExt;
 }
 
 /**
@@ -34,25 +34,109 @@ export const findFileUpward = (startPath: string, fileName: string): string | nu
 /**
  * Maps metadata fields to string placeholders used by action arguments.
  */
-export function mapMetadataToDictionary(metadata: IMetadata): Record<string, string> {
+// export function mapMetadataToDictionary(metadata: IMetadata): Record<string, string> {
+//     const dictionary: Record<string, string> = {};
+
+//     dictionary['generatedBy'] = metadata.GeneratedBy;
+//     dictionary['enabled'] = String(metadata.Enabled);
+//     dictionary['name'] = metadata.Name;
+//     dictionary['file'] = metadata.Path;
+//     dictionary['modified'] = metadata.Modified;
+//     dictionary['cellwidth'] = String(metadata.Width);
+//     dictionary['cellheight'] = String(metadata.Height);
+//     dictionary['columns'] = String(metadata.Columns);
+//     dictionary['rows'] = String(metadata.Rows);
+//     dictionary['width'] = String(metadata.Width * metadata.Columns);
+//     dictionary['height'] = String(metadata.Height * metadata.Rows);
+//     dictionary['filewithoutextension'] = changeExtension(metadata.Path, '');
+//     dictionary['directory'] = path.dirname(metadata.Path);          // this could be an issue, the default directory should be taken from the trigger file
+//     return dictionary;
+// }
+
+
+
+export function mapMetadataToDictionary(store: Record<string, string> , metadata: IMetadata): Record<string, string> {
     const dictionary: Record<string, string> = {};
 
-    dictionary['generatedBy'] = metadata.GeneratedBy;
-    dictionary['enabled'] = String(metadata.Enabled);
-    dictionary['name'] = metadata.Name;
-    dictionary['file'] = metadata.Path;
-    dictionary['modified'] = metadata.Modified;
-    dictionary['cellwidth'] = String(metadata.Width);
-    dictionary['cellheight'] = String(metadata.Height);
-    dictionary['columns'] = String(metadata.Columns);
-    dictionary['rows'] = String(metadata.Rows);
-    dictionary['width'] = String(metadata.Width * metadata.Columns);
-    dictionary['height'] = String(metadata.Height * metadata.Rows);
-    dictionary['filewithoutextension'] = changeExtension(metadata.Path, '');
-    dictionary['directory'] = path.dirname(metadata.Path);          // this could be an issue, the default directory should be taken from the trigger file
+    if (metadata.GeneratedBy !== undefined)
+    {
+        addIfNotExists(store, 'generatedBy', metadata.GeneratedBy);
+    }
+
+    if (metadata.Enabled !== undefined)
+    {
+        addIfNotExists(store, 'enabled',  String(metadata.Enabled));
+    }
+
+    if (metadata.Name !== undefined)
+    {
+        addIfNotExists(store, 'name',  metadata.Name);
+    }
+
+    if (metadata.Path !== undefined)
+    {
+        addIfNotExists(store, 'file',  metadata.Path);
+    }
+
+    if (metadata.Modified !== undefined)
+    {
+        addIfNotExists(store, 'modified',  metadata.Modified);
+    }
+
+    if (metadata.Width !== undefined)
+    {
+        addIfNotExists(store, 'cellwidth',  String(metadata.Width));
+    }
+
+    if (metadata.Height !== undefined)
+    {
+        addIfNotExists(store, 'cellheight',  String(metadata.Height));
+    }
+
+    if (metadata.Columns !== undefined)
+    {
+        addIfNotExists(store, 'columns',  String(metadata.Columns));
+    }
+
+
+    if (metadata.Rows !== undefined)
+    {
+        addIfNotExists(store, 'rows',  String(metadata.Rows));
+    }
+
+    if (metadata.Columns !== undefined)
+    {
+        addIfNotExists(store, 'width',  String(metadata.Columns));
+    }
+
+    if (metadata.Width !== undefined)
+    {
+        addIfNotExists(store, 'width', String(metadata.Width * metadata.Columns));
+    }
+
+    if (metadata.Height !== undefined)
+    {
+        addIfNotExists(store, 'height', String(metadata.Height * metadata.Rows));
+    }
+
+    if (metadata.Height !== undefined)
+    {
+        addIfNotExists(store, 'filewithoutextension', changeExtension(metadata.Path, ''));
+    }
+
+    if (metadata.Path !== undefined)
+    {
+        addIfNotExists(store, 'directory', path.dirname(metadata.Path));
+    }
     return dictionary;
 }
 
+
+function addIfNotExists(store: Record<string, string> ,key: string, value: string) {
+    if (!(key in store)) {
+        store[key] = value;
+    }
+}
 
 /**
  * Replaces placeholder tokens in a command argument with metadata values.
@@ -91,5 +175,14 @@ export const ExecuteFile = (filePath: string, parameters: string, workingDirecto
  * Resolves the metadata sidecar path for an asset file path.
  */
 export function getMetadataFilePath(inputPath: string): string {
-    return changeExtension(inputPath, '.metadata');
+    return appendExtension(inputPath, 'metadata');
+}
+
+async function fileExists(uri: vscode.Uri): Promise<boolean> {
+    try {
+        await vscode.workspace.fs.stat(uri);
+        return true;
+    } catch {
+        return false;
+    }
 }

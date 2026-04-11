@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { version } from '../../package.json';
 import { readTileSet } from '../services/TileSet';
-import { changeExtension, getMetadataFilePath } from '../utils/utils';
+import { appendExtension, changeExtension, getMetadataFilePath } from '../utils/utils';
 import { IMetadata } from '../models/IMetadata';
 import { IFileItem } from '../models/IFileItem';
 
@@ -101,7 +101,7 @@ function updateGeneric(metadata: IMetadata, filePath: string): IMetadata {
  * Loads and parses a metadata sidecar file for the provided asset path.
  */
 export async function getMetadata(fileData: string): Promise<IMetadata> {
-    const filePathMetadata = changeExtension(fileData, '.metadata');
+    const filePathMetadata = appendExtension(fileData, 'metadata');
     const raw = await fs.promises.readFile(filePathMetadata, 'utf-8');
     const parsed = JSON.parse(raw) as IMetadata;
     return parsed;
