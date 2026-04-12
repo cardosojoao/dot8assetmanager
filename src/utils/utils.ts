@@ -141,7 +141,7 @@ function addIfNotExists(store: Record<string, string> ,key: string, value: strin
 /**
  * Replaces placeholder tokens in a command argument with metadata values.
  */
-export function argumentApplyMetadata(argument: string, dictionary: Record<string, string>): string {
+export function applyMetadataToArgument(argument: string, dictionary: Record<string, string>): string {
     return Object.entries(dictionary).reduce((result, [key, value]) => {
         return result.replaceAll(`\${${key}}`, value);
     }, argument);
@@ -151,7 +151,7 @@ export function argumentApplyMetadata(argument: string, dictionary: Record<strin
  * Executes an external command and logs process output to the extension output
  * channel.
  */
-export const ExecuteFile = (filePath: string, parameters: string, workingDirectory: string = ''): boolean => {
+export const executeFile = (filePath: string, parameters: string, workingDirectory: string = ''): boolean => {
     const cmd = `${filePath} ${parameters}`;
     try {
         outputChannel.appendLine(`[EXEC] Running: ${cmd}`);

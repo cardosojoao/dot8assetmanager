@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { config, reloadConfig, saveConfig, watchConfig } from './config/config';
-import { registerScanCommand } from './commands/UpdateChanged';
-import { registerApplyCommand } from './commands/updateAll';
+import { registerUpdateChangedCommand } from './commands/UpdateChanged';
+import { registerUpdateAllCommand } from './commands/updateAll';
 
 export let outputChannel: vscode.OutputChannel;
 
@@ -16,8 +16,8 @@ export async function activate(context: vscode.ExtensionContext) {
     console.log("Just getting started...");
     outputChannel = vscode.window.createOutputChannel("dot8assetmanager");
 
-    registerScanCommand(context);
-    registerApplyCommand(context);
+    registerUpdateChangedCommand(context);
+    registerUpdateAllCommand(context);
 
     outputChannel.appendLine("Extension activated");
     outputChannel.appendLine("Current Settings:");

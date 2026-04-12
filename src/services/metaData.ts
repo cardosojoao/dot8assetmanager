@@ -12,7 +12,7 @@ const GENERATED_BY = `Dot8-MetadataUpdate-${version}`;
  * Creates a metadata sidecar file for the target asset when one does not
  * already exist.
  */
-export function CreateMetadata(targetPath: string): void {
+export function createMetadata(targetPath: string): void {
     const metadataPath = getMetadataFilePath(targetPath);
     if (!fs.existsSync(metadataPath)) {
         const modified = fs.statSync(targetPath).mtime;

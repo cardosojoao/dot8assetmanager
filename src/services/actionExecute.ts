@@ -1,7 +1,7 @@
 import { IFileItem } from '../models/IFileItem';
 import { IMetadata } from '../models/IMetadata';
-import { appendExtension, ExecuteFile, fileExists, getMetadataFilePath, isLikelyFileName } from '../utils/utils';
-import { changeExtension, findFileUpward, mapMetadataToDictionary, argumentApplyMetadata } from '../utils/utils';
+import { appendExtension, executeFile, fileExists, getMetadataFilePath, isLikelyFileName } from '../utils/utils';
+import { changeExtension, findFileUpward, mapMetadataToDictionary, applyMetadataToArgument } from '../utils/utils';
 import { outputChannel } from '../extension';
 import { saveMetadata, getMetadata, updateMetadataType, getMetadataGeneric } from './metaData';
 import { Action } from '../models/action';
@@ -81,12 +81,14 @@ export async function executeAction(action: Action, file: IFileItem): Promise<vo
             }
 
             try {
-                const args = step.args.map(arg => argumentApplyMetadata(arg, metaDataDict)).map(arg => argumentApplyMetadata(arg, metadataDictStep));
-                //const args = step.args.map(arg => argumentApplyMetadata(arg, metaDataDict));
+                const args = step.args.map(arg => applyMetadataToArgument(arg, metaDataDict)).map(arg => applyMetadataToArgument(arg, metadataDictStep));
+                //const args = step.args.map(arg => applyMetadataToArgument(arg, metaDataDict));
 
-                const workingDir = step.workingDirectory ? argumentApplyMetadata(step.workingDirectory, metaDataDict) : '';
+                const workingDir = step.workingDirectory
+                    ? applyMetadataToArgument(step.workingDirectory, metaDataDict)
+                    : path.dirname(file.path);
                 const fullCommand = `${step.command} ${args.join(' ')}`;
-                const stepSuccess = ExecuteFile(step.command, args.join(' '), workingDir);
+                const stepSuccess = executeFile(step.command, args.join(' '), workingDir);
                 if (!stepSuccess) {
                     outputChannel.appendLine(`[STEP] ❌ Step failed: ${step.name}`);
                     allStepsResult = false;

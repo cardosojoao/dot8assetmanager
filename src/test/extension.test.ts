@@ -4,10 +4,10 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as vscode from 'vscode';
 
-import { changeExtension, findFileUpward, mapMetadataToDictionary, argumentApplyMetadata } from '../utils/utils';
+import { changeExtension, findFileUpward, mapMetadataToDictionary, applyMetadataToArgument } from '../utils/utils';
 import { Action } from '../models/action';
 import { IMetadata } from '../models/IMetadata';
-import { CreateMetadata, saveMetadata } from '../services/metaData';
+import { createMetadata, saveMetadata } from '../services/metaData';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -137,28 +137,28 @@ suite('utils.mapMetadataToDictionary', () => {
 });
 
 // ---------------------------------------------------------------------------
-// utils — argumentApplyMetadata
+// utils — applyMetadataToArgument
 // ---------------------------------------------------------------------------
 
-suite('utils.argumentApplyMetadata', () => {
+suite('utils.applyMetadataToArgument', () => {
     test('replaces a single placeholder', () => {
         const dict = { file: '/assets/sprite.png' };
-        assert.strictEqual(argumentApplyMetadata('--input ${file}', dict), '--input /assets/sprite.png');
+        assert.strictEqual(applyMetadataToArgument('--input ${file}', dict), '--input /assets/sprite.png');
     });
 
     test('replaces multiple occurrences of the same placeholder', () => {
         const dict = { file: 'sprite.png' };
-        assert.strictEqual(argumentApplyMetadata('${file} ${file}', dict), 'sprite.png sprite.png');
+        assert.strictEqual(applyMetadataToArgument('${file} ${file}', dict), 'sprite.png sprite.png');
     });
 
     test('leaves unknown placeholders untouched', () => {
         const dict = { file: 'sprite.png' };
-        assert.strictEqual(argumentApplyMetadata('${unknown}', dict), '${unknown}');
+        assert.strictEqual(applyMetadataToArgument('${unknown}', dict), '${unknown}');
     });
 
     test('replaces multiple different placeholders', () => {
         const dict = { cellwidth: '16', cellheight: '32' };
-        assert.strictEqual(argumentApplyMetadata('-w ${cellwidth} -h ${cellheight}', dict), '-w 16 -h 32');
+        assert.strictEqual(applyMetadataToArgument('-w ${cellwidth} -h ${cellheight}', dict), '-w 16 -h 32');
     });
 });
 
@@ -216,10 +216,10 @@ suite('Action', () => {
 });
 
 // ---------------------------------------------------------------------------
-// metaData — CreateMetadata / saveMetadata
+// metaData — createMetadata / saveMetadata
 // ---------------------------------------------------------------------------
 
-suite('metaData.CreateMetadata', () => {
+suite('metaData.createMetadata', () => {
     let tmpDir: string;
 
     setup(() => {
@@ -233,7 +233,7 @@ suite('metaData.CreateMetadata', () => {
     test('creates .metadata file when it does not exist', () => {
         const assetPath = path.join(tmpDir, 'sprite.png');
         fs.writeFileSync(assetPath, 'fake-png');
-        CreateMetadata(assetPath);
+        createMetadata(assetPath);
         const metaPath = changeExtension(assetPath, '.metadata');
         assert.ok(fs.existsSync(metaPath), '.metadata file should exist');
         const parsed = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
@@ -248,7 +248,7 @@ suite('metaData.CreateMetadata', () => {
         const original = JSON.stringify({ existing: true });
         fs.writeFileSync(metaPath, original);
 
-        CreateMetadata(assetPath);
+        createMetadata(assetPath);
 
         const content = fs.readFileSync(metaPath, 'utf-8');
         assert.deepStrictEqual(JSON.parse(content), { existing: true });

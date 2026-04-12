@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
-import { CreateMetadata } from '../services/metaData';
+import { createMetadata } from '../services/metaData';
 import { IFileItem } from '../models/IFileItem';
 import { config } from '../config/config';
 import { outputChannel } from '../extension';
 import { getFiles, getMetadataFiles, IFileChangeEvent } from '../services/files';
-import { ProcessFiles } from '../services/ProcessFile';
+import { processFiles } from '../services/ProcessFile';
 import { fileChanges, watchFoldersAndCollectChanges } from '../services/files';
 
 /**
@@ -13,7 +13,7 @@ import { fileChanges, watchFoldersAndCollectChanges } from '../services/files';
  *
  * Command id: `dot8assetmanager.scan`
  */
-export function registerScanCommand(context: vscode.ExtensionContext) {
+export function registerUpdateChangedCommand(context: vscode.ExtensionContext) {
     const disposable = vscode.commands.registerCommand('dot8assetmanager.updateChangedAssets',
         async () => {
             try {
@@ -28,17 +28,17 @@ export function registerScanCommand(context: vscode.ExtensionContext) {
                 while (true) {
                     outputChannel.appendLine(`[SCAN] Found ${files.length} files`);
 
-                    const filesmetadata = await getMetadataFiles(files);
-                    outputChannel.appendLine(`[SCAN] Found ${filesmetadata.length} metadata files`);
+                    const metadataFiles = await getMetadataFiles(files);
+                    outputChannel.appendLine(`[SCAN] Found ${metadataFiles.length} metadata files`);
 
                     // Files without matching metadata are treated as new assets.
                     const unmatched = files.filter((a: IFileItem) =>
-                        !filesmetadata.some((b: IFileItem) => b.filter === a.filter));
+                        !metadataFiles.some((b: IFileItem) => b.filter === a.filter));
                     outputChannel.appendLine(`[SCAN] ${unmatched.length} unmatched files (need new metadata)`);
 
                     // Metadata files whose source assets changed since metadata was written.
                     const updated = files.map((a: IFileItem) => ({
-                        a, b: filesmetadata.find((b: IFileItem) => b.filter === a.filter)
+                        a, b: metadataFiles.find((b: IFileItem) => b.filter === a.filter)
                     }))
                         .filter((pair: { a: IFileItem, b: IFileItem | undefined }) => pair.b !== undefined && pair.a.modified > pair.b.modified)
                         .map((pair: { a: IFileItem, b: IFileItem | undefined }) => pair.b as IFileItem);
@@ -48,15 +48,15 @@ export function registerScanCommand(context: vscode.ExtensionContext) {
                     for (const fileData of unmatched) {
                         outputChannel.appendLine(`[METADATA] Creating metadata for: ${fileData?.path}`);
                         try {
-                            CreateMetadata(fileData.path);
+                            createMetadata(fileData.path);
                         } catch (error) {
                             outputChannel.appendLine(`[ERROR] ❌ Failed to create metadata for ${fileData?.path}: ${error}`);
                         }
                     }
                     // apply action steps for update files
-                    const whatchers = watchFoldersAndCollectChanges(config.scanFolders, config.scanExtensions);
-                    await ProcessFiles(updated);
-                    await whatchers.dispose();
+                    const watchers = watchFoldersAndCollectChanges(config.scanFolders, config.scanExtensions);
+                    await processFiles(updated);
+                    await watchers.dispose();
 
                     // check if new or uppdate files were part of the iniitial scan and remove them from the change list to avoid double processing
                     const updateFiles = fileChanges.filter((a: IFileChangeEvent) =>
@@ -69,9 +69,9 @@ export function registerScanCommand(context: vscode.ExtensionContext) {
                         pass++;
                         allFiles.concat(updated);
                         updated.splice(0, updated.length);      // clear original array
-                        const reduceUpdate = [...new Set(updateFiles)];
+                        const dedupedUpdates = [...new Set(updateFiles)];
                         files.splice(0, files.length);      // clear original array
-                        files.concat(reduceUpdate.map((change: IFileChangeEvent) => { return <IFileItem>change; }));
+                        files.concat(dedupedUpdates.map((change: IFileChangeEvent) => { return <IFileItem>change; }));
                     } else {
                         break;
                     }

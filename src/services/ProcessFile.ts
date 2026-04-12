@@ -8,7 +8,7 @@ import { executeAction, getActionMetadata } from "./actionExecute";
  * Groups files by folder, resolves the nearest action metadata, and executes
  * action steps for each file in that folder.
  */
-export async function ProcessFiles(files: IFileItem[]): Promise<void> {
+export async function processFiles(files: IFileItem[]): Promise<void> {
     const grouped = files.reduce((acc, file) => {
         const folder = Path.dirname(file.filter);
         if (!acc[folder]) { acc[folder] = []; }
@@ -35,10 +35,10 @@ export async function ProcessFiles(files: IFileItem[]): Promise<void> {
             )
         );
         // merget action order extension and add existing extensions in folder, to ensure we process files in the order defined by action.extensionOrder, but also include any extensions that are present in the folder but not defined in action.extensionOrder (these will be processed last)
-        const processeExtensions = Array.from(new Set([...action.extensionOrder, ...uniqueExtensions]));
+        const processingExtensions = Array.from(new Set([...action.extensionOrder, ...uniqueExtensions]));
 
         const orderedFiles: IFileItem[] = [];
-        processeExtensions.forEach(ext => {
+        processingExtensions.forEach(ext => {
             orderedFiles.push(
                 ...grouped[folder].filter(file => file.path.endsWith(ext))
             );
