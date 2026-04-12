@@ -7,7 +7,7 @@ import * as vscode from 'vscode';
 import { changeExtension, findFileUpward, mapMetadataToDictionary, applyMetadataToArgument } from '../utils/utils';
 import { Action } from '../models/action';
 import { IMetadata } from '../models/IMetadata';
-import { createMetadata, saveMetadata } from '../services/metaData';
+import { createMetadata, saveMetadata } from '../services/metadata';
 
 // ---------------------------------------------------------------------------
 // Helpers

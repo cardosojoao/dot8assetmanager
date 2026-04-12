@@ -1,6 +1,6 @@
 // config.ts
 import * as vscode from 'vscode';
-import { Dot8AssetManagerConfig } from './dot8assetmanagerConfig';
+import { Dot8AssetManagerConfig } from './dot8AssetManagerConfig';
 
 
 

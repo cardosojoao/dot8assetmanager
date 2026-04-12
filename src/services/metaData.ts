@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { version } from '../../package.json';
-import { readTileSet } from '../services/TileSet';
+import { readTileSet } from '../services/tileSet';
 import { appendExtension, changeExtension, getMetadataFilePath } from '../utils/utils';
 import { IMetadata } from '../models/IMetadata';
 import { IFileItem } from '../models/IFileItem';

@@ -2,14 +2,20 @@ import * as vscode from 'vscode';
 import fs from 'fs';
 import path from 'path';
 import { IFileItem } from '../models/IFileItem';
-import { outputChannel } from '../extension';
 import { appendExtension, changeExtension } from '../utils/utils';
+import { logLine } from './logger';
 
 export interface IFileChangeEvent extends IFileItem {
     changeType: 'created' | 'changed' | 'deleted';
 }
 
 export const fileChanges: IFileChangeEvent[] = [];
+
+function resolveScanFolderPath(workspaceRoot: string, folder: string): string {
+    return path.isAbsolute(folder)
+        ? path.normalize(folder)
+        : path.resolve(workspaceRoot, folder);
+}
 
 /**
  * Scans configured folders and returns matching files with normalized metadata
@@ -20,7 +26,7 @@ export async function getFiles(scanFolders: string[], extensions: string[] = [])
     try {
         const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
         if (!workspaceRoot) {
-            outputChannel.appendLine('[FILES] ❌ Error: No workspace folder open!');
+            logLine('[FILES] ❌ Error: No workspace folder open!');
             vscode.window.showErrorMessage('No workspace folder open!');
             return [];
         }
@@ -28,7 +34,7 @@ export async function getFiles(scanFolders: string[], extensions: string[] = [])
         //outputChannel.appendLine(`[FILES] Scanning workspace: ${workspaceRoot}`);
 
         for (const folder of scanFolders) {
-            const targetFolder = path.resolve(workspaceRoot, '..', folder);
+            const targetFolder = resolveScanFolderPath(workspaceRoot, folder);
             const pattern = new vscode.RelativePattern(targetFolder, `**/*.{${extensions.join(',')}}`);
             const files = await vscode.workspace.findFiles(
                 pattern, '**/*.{metadata,cmd,ini}'
@@ -45,13 +51,13 @@ export async function getFiles(scanFolders: string[], extensions: string[] = [])
                         //filter: path.join(path.dirname(pathFile), path.basename(pathFile, path.extname(pathFile))).toLowerCase()
                     };
                 } catch (error) {
-                    outputChannel.appendLine(`[FILES] ⚠️ Warning: Failed to stat ${file.fsPath}: ${error instanceof Error ? error.message : String(error)}`);
+                    logLine(`[FILES] ⚠️ Warning: Failed to stat ${file.fsPath}: ${error instanceof Error ? error.message : String(error)}`);
                     throw error;
                 }
             }));
         }
     } catch (error) {
-        outputChannel.appendLine(`[FILES] ❌ Fatal error scanning files: ${error instanceof Error ? error.message : String(error)}`);
+        logLine(`[FILES] ❌ Fatal error scanning files: ${error instanceof Error ? error.message : String(error)}`);
         throw error;
     }
 
@@ -80,10 +86,10 @@ export async function getMetadataFiles(files: IFileItem[]): Promise<IFileItem[]>
                     //filter: path.join(path.dirname(parsed.Path), path.basename(parsed.Path, path.extname(parsed.Path))).toLowerCase()
                 });
             } else {
-                outputChannel.appendLine(`[METADATA] No metadata file for: ${fileData.path}`);
+                logLine(`[METADATA] No metadata file for: ${fileData.path}`);
             }
         } catch (error) {
-            outputChannel.appendLine(`[METADATA] ❌ Error processing ${fileData.path}: ${error instanceof Error ? error.message : String(error)}`);
+            logLine(`[METADATA] ❌ Error processing ${fileData.path}: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
 
@@ -101,7 +107,7 @@ export function watchFoldersAndCollectChanges(
 ): vscode.Disposable {
     const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
     if (!workspaceRoot) {
-        outputChannel.appendLine('[WATCH] ❌ Error: No workspace folder open!');
+        logLine('[WATCH] ❌ Error: No workspace folder open!');
         throw new Error('No workspace folder open!');
     }
 
@@ -136,11 +142,11 @@ export function watchFoldersAndCollectChanges(
             filter: path.join(path.dirname(filePath), path.basename(filePath, path.extname(filePath))).toLowerCase(),
             changeType
         });
-        outputChannel.appendLine(`[WATCH] ${changeType.toUpperCase()}: ${filePath}`);
+        logLine(`[WATCH] ${changeType.toUpperCase()}: ${filePath}`);
     };
 
     for (const folder of scanFolders) {
-        const targetFolder = path.resolve(workspaceRoot, '..', folder);
+        const targetFolder = resolveScanFolderPath(workspaceRoot, folder);
         //const pattern = new vscode.RelativePattern(targetFolder, `**/*.{${extensions.join(',')}}`);
         const pattern = new vscode.RelativePattern(targetFolder, `**/*`);
         const watcher = vscode.workspace.createFileSystemWatcher(pattern, false, false, false);
@@ -150,7 +156,7 @@ export function watchFoldersAndCollectChanges(
         watcher.onDidDelete((uri) => addChange(uri, 'deleted'));
 
         watchers.push(watcher);
-        outputChannel.appendLine(`[WATCH] Monitoring folder: ${targetFolder}`);
+        logLine(`[WATCH] Monitoring folder: ${targetFolder}`);
     }
 
     return new vscode.Disposable(() => {

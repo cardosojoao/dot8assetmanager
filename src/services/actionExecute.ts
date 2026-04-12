@@ -2,11 +2,11 @@ import { IFileItem } from '../models/IFileItem';
 import { IMetadata } from '../models/IMetadata';
 import { appendExtension, executeFile, fileExists, getMetadataFilePath, isLikelyFileName } from '../utils/utils';
 import { changeExtension, findFileUpward, mapMetadataToDictionary, applyMetadataToArgument } from '../utils/utils';
-import { outputChannel } from '../extension';
-import { saveMetadata, getMetadata, updateMetadataType, getMetadataGeneric } from './metaData';
+import { saveMetadata, getMetadata, updateMetadataType, getMetadataGeneric } from './metadata';
 import { Action } from '../models/action';
 import path from 'path';
 import * as vscode from 'vscode';
+import { logLine } from './logger';
 
 /**
  * Resolves the closest action metadata file for a folder and returns a parsed
@@ -16,13 +16,13 @@ export async function getActionMetadata(folder: string): Promise<Action | null> 
     try {
         const actionPath = findFileUpward(folder, 'action.metadata');
         if (actionPath !== null) {
-            outputChannel.appendLine(`[ACTION] Found action file: ${actionPath}`);
+            logLine(`[ACTION] Found action file: ${actionPath}`);
             return Action.fromFile(actionPath);
         } else {
-            outputChannel.appendLine(`[ACTION] ⚠️ No action file found for ${folder}`);
+            logLine(`[ACTION] ⚠️ No action file found for ${folder}`);
         }
     } catch (error) {
-        outputChannel.appendLine(`[ACTION] ❌ Fatal error processing ${folder}: ${error instanceof Error ? error.message : String(error)}`);
+        logLine(`[ACTION] ❌ Fatal error processing ${folder}: ${error instanceof Error ? error.message : String(error)}`);
     }
     return null;
 }
@@ -35,7 +35,7 @@ export async function executeAction(action: Action, file: IFileItem): Promise<vo
 
     try {
         const steps = action.getStepsForFile(file.path);
-        outputChannel.appendLine(`[ACTION] Found ${steps.length} steps to execute`);
+        logLine(`[ACTION] Found ${steps.length} steps to execute`);
 
         let metaData = await getMetadata(file.path);
         metaData = updateMetadataType(metaData, file.path) as IMetadata;
@@ -48,7 +48,7 @@ export async function executeAction(action: Action, file: IFileItem): Promise<vo
 
 
         for (const step of steps) {
-            outputChannel.appendLine(`[STEP] Executing: ${step.name}`);
+            logLine(`[STEP] Executing: ${step.name}`);
             const metadataDictStep: Record<string, string> = {};
 
             if (step.metadata !== undefined && step.metadata.length > 0) {
@@ -90,13 +90,13 @@ export async function executeAction(action: Action, file: IFileItem): Promise<vo
                 const fullCommand = `${step.command} ${args.join(' ')}`;
                 const stepSuccess = executeFile(step.command, args.join(' '), workingDir);
                 if (!stepSuccess) {
-                    outputChannel.appendLine(`[STEP] ❌ Step failed: ${step.name}`);
+                    logLine(`[STEP] ❌ Step failed: ${step.name}`);
                     allStepsResult = false;
                     break;
                 }
-                outputChannel.appendLine(`[STEP] ✅  Step succeeded: ${step.name}`);
+                logLine(`[STEP] ✅  Step succeeded: ${step.name}`);
             } catch (error) {
-                outputChannel.appendLine(`[STEP] ❌ Step error: ${error instanceof Error ? error.message : String(error)}`);
+                logLine(`[STEP] ❌ Step error: ${error instanceof Error ? error.message : String(error)}`);
                 allStepsResult = false;
                 break;
             }
@@ -107,12 +107,12 @@ export async function executeAction(action: Action, file: IFileItem): Promise<vo
             const metadataPath = appendExtension(file.path, 'metadata');
             metaData.Modified = now.toISOString();
             saveMetadata(metaData, metadataPath);
-            outputChannel.appendLine(`[ACTION] ✅  All steps completed, metadata updated at ${now.toISOString()}`);
+            logLine(`[ACTION] ✅  All steps completed, metadata updated at ${now.toISOString()}`);
         } else {
-            outputChannel.appendLine(`[ACTION] ❌ Action failed, metadata not updated`);
+            logLine(`[ACTION] ❌ Action failed, metadata not updated`);
         }
     } catch (error) {
-        outputChannel.appendLine(`[ACTION] ❌ Fatal error executing action for ${file.path}: ${error instanceof Error ? error.message : String(error)}`);
+        logLine(`[ACTION] ❌ Fatal error executing action for ${file.path}: ${error instanceof Error ? error.message : String(error)}`);
     }
 }
 

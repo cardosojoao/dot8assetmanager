@@ -1,7 +1,8 @@
 import * as vscode from 'vscode';
-import { config, reloadConfig, saveConfig, watchConfig } from './config/config';
-import { registerUpdateChangedCommand } from './commands/UpdateChanged';
+import { config, reloadConfig, watchConfig } from './config/config';
+import { registerUpdateChangedCommand } from './commands/updateChanged';
 import { registerUpdateAllCommand } from './commands/updateAll';
+import { setLoggerChannel } from './services/logger';
 
 export let outputChannel: vscode.OutputChannel;
 
@@ -15,6 +16,7 @@ export async function activate(context: vscode.ExtensionContext) {
     reloadConfig();
     console.log("Just getting started...");
     outputChannel = vscode.window.createOutputChannel("dot8assetmanager");
+    setLoggerChannel(outputChannel);
 
     registerUpdateChangedCommand(context);
     registerUpdateAllCommand(context);
