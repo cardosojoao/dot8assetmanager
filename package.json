@@ -3,9 +3,14 @@
   "displayName": "dot8 asset manager",
   "description": "Dot 8 Engine asset manager",
   "version": "0.0.1",
+  "icon": "images/logo_black.ico",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cardosojoao/dot8assetmanager.git"
+  },  
   "license": "MIT",
   "engines": {
-    "vscode": "^1.110.0"
+    "vscode": "^1.115.0"
   },
   "categories": [
     "Other"
