@@ -14,7 +14,7 @@ export function changeExtension(filePath: string, newExt: string): string {
 }
 
 export function appendExtension(filePath: string, newExt: string): string {
-    return filePath +"." + newExt;
+    return filePath + "." + newExt;
 }
 
 /**
@@ -55,84 +55,65 @@ export const findFileUpward = (startPath: string, fileName: string): string | nu
 
 
 
-export function mapMetadataToDictionary(store: Record<string, string> , metadata: IMetadata): Record<string, string> {
+export function mapMetadataToDictionary(store: Record<string, string>, metadata: IMetadata): Record<string, string> {
     const dictionary: Record<string, string> = {};
 
-    if (metadata.GeneratedBy !== undefined)
-    {
+    if (metadata.GeneratedBy !== undefined) {
         addIfNotExists(store, 'generatedBy', metadata.GeneratedBy);
     }
 
-    if (metadata.Enabled !== undefined)
-    {
-        addIfNotExists(store, 'enabled',  String(metadata.Enabled));
+    if (metadata.Enabled !== undefined) {
+        addIfNotExists(store, 'enabled', String(metadata.Enabled));
     }
 
-    if (metadata.Name !== undefined)
-    {
-        addIfNotExists(store, 'name',  metadata.Name);
+    if (metadata.Name !== undefined) {
+        addIfNotExists(store, 'name', metadata.Name);
     }
 
-    if (metadata.Path !== undefined)
-    {
-        addIfNotExists(store, 'file',  metadata.Path);
+    if (metadata.Path !== undefined) {
+        addIfNotExists(store, 'file', metadata.Path);
     }
 
-    if (metadata.Modified !== undefined)
-    {
-        addIfNotExists(store, 'modified',  metadata.Modified);
+    if (metadata.Modified !== undefined) {
+        addIfNotExists(store, 'modified', metadata.Modified);
     }
 
-    if (metadata.Width !== undefined)
-    {
-        addIfNotExists(store, 'cellwidth',  String(metadata.Width));
+    if (metadata.Width !== undefined) {
+        addIfNotExists(store, 'cellwidth', String(metadata.Width));
     }
 
-    if (metadata.Height !== undefined)
-    {
-        addIfNotExists(store, 'cellheight',  String(metadata.Height));
+    if (metadata.Height !== undefined) {
+        addIfNotExists(store, 'cellheight', String(metadata.Height));
     }
 
-    if (metadata.Columns !== undefined)
-    {
-        addIfNotExists(store, 'columns',  String(metadata.Columns));
+    if (metadata.Columns !== undefined) {
+        addIfNotExists(store, 'columns', String(metadata.Columns));
     }
 
-
-    if (metadata.Rows !== undefined)
-    {
-        addIfNotExists(store, 'rows',  String(metadata.Rows));
+    if (metadata.Rows !== undefined) {
+        addIfNotExists(store, 'rows', String(metadata.Rows));
     }
 
-    if (metadata.Columns !== undefined)
-    {
-        addIfNotExists(store, 'width',  String(metadata.Columns));
-    }
-
-    if (metadata.Width !== undefined)
-    {
+    if (metadata.Width !== undefined) {
         addIfNotExists(store, 'width', String(metadata.Width * metadata.Columns));
     }
 
-    if (metadata.Height !== undefined)
-    {
+    if (metadata.Height !== undefined) {
         addIfNotExists(store, 'height', String(metadata.Height * metadata.Rows));
     }
 
-    if (metadata.Height !== undefined)
-    {
+    if (metadata.Height !== undefined) {
         addIfNotExists(store, 'filewithoutextension', changeExtension(metadata.Path, ''));
     }
 
-    if (metadata.Path !== undefined)
-    {
+    if (metadata.Path !== undefined) {
         addIfNotExists(store, 'directory', path.dirname(metadata.Path));
     }
     return dictionary;
 }
 
 
-function addIfNotExists(store: Record<string, string> ,key: string, value: string) {
+function addIfNotExists(store: Record<string, string>, key: string, value: string) {
     if (!(key in store)) {
         store[key] = value;
     }
@@ -183,18 +164,18 @@ export async function fileExists(file: string): Promise<boolean> {
 }
 
 export function mergeNoDuplicateKeys(
-  a: Record<string, string>,
-  b: Record<string, string>
+    a: Record<string, string>,
+    b: Record<string, string>
 ): Record<string, string> {
-  const result = { ...a };
+    const result = { ...a };
 
-  for (const key in b) {
-    if (!(key in result)) {
-      result[key] = b[key];
+    for (const key in b) {
+        if (!(key in result)) {
+            result[key] = b[key];
+        }
     }
-  }
 
-  return result;
+    return result;
 }
 
 
@@ -206,4 +187,25 @@ export function isLikelyFileName(input: string): boolean {
 
 export function isLikelyFilePath(input: string): boolean {
     return path.dirname(input) !== '.';
+}
+
+export function getPatternDimensions(input: string): [width: number,height:  number] {
+    const fd = fs.openSync(input, "r");
+    // Read first 24 bytes (enough)
+    const buffer = Buffer.alloc(24);
+    fs.readSync(fd, buffer, 0, 24, 0);
+    fs.closeSync(fd);
+    // Validate PNG signature (optional but recommended)
+    const isPng =
+        buffer[0] === 0x89 &&
+        buffer[1] === 0x50 &&
+        buffer[2] === 0x4e &&
+        buffer[3] === 0x47;
+    if (!isPng) {
+        throw new Error("Not a PNG file");
+    }
+    // Read dimensions
+    const width = buffer.readUInt32BE(16);
+    const height = buffer.readUInt32BE(20);
+    return [width, height];
 }

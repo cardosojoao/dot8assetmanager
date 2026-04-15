@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { version } from '../../package.json';
 import { readTileSet } from '../services/tileSet';
-import { appendExtension, changeExtension, getMetadataFilePath } from '../utils/utils';
+import { appendExtension, getMetadataFilePath, getPatternDimensions } from '../utils/utils';
 import { IMetadata } from '../models/IMetadata';
 import { IFileItem } from '../models/IFileItem';
 
@@ -67,10 +67,10 @@ function updateTileSet(metadata: IMetadata, filePath: string): IMetadata {
     const pathData = path.join(path.dirname(metadata.Path), tileSet.image.source);
 
     metadata.GeneratedBy = GENERATED_BY;
-    metadata.Width = tileSet.tilewidth;
-    metadata.Height = tileSet.tileheight;
-    metadata.Columns = tileSet.columns;
-    metadata.Rows = tileSet.tilecount / tileSet.columns;
+    metadata.Width = Number(tileSet.tilewidth);
+    metadata.Height = Number(tileSet.tileheight);
+    metadata.Columns = Number(tileSet.columns);
+    metadata.Rows = Number(tileSet.tilecount) / Number(tileSet.columns);
     metadata.Path = pathData;
     return metadata;
 }
@@ -79,10 +79,18 @@ function updateTileSet(metadata: IMetadata, filePath: string): IMetadata {
  * Updates metadata fields for a pattern image source file.
  */
 function updatePattern(metadata: IMetadata, filePath: string): IMetadata {
-    //const metadataPath = getMetadataFilePath(metadata.Path);
-
+    const dimension: [width : number,height: number]= getPatternDimensions(filePath);
     metadata.GeneratedBy = GENERATED_BY;
     metadata.Path = filePath;
+    if (metadata.Width === undefined)
+    {
+        metadata.Width = dimension[0];
+    }
+
+    if (metadata.Height === undefined)
+    {
+        metadata.Height = dimension[1];
+    }
     return metadata;
 }
 
