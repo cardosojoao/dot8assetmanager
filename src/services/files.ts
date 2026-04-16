@@ -4,6 +4,7 @@ import path from 'path';
 import { IFileItem } from '../models/IFileItem';
 import { appendExtension, changeExtension } from '../utils/utils';
 import { logLine } from './logger';
+//import { WatcherManager } from './watcher';
 
 export interface IFileChangeEvent extends IFileItem {
     changeType: 'created' | 'changed' | 'deleted';
@@ -11,11 +12,7 @@ export interface IFileChangeEvent extends IFileItem {
 
 export const fileChanges: IFileChangeEvent[] = [];
 
-function resolveScanFolderPath(workspaceRoot: string, folder: string): string {
-    return path.isAbsolute(folder)
-        ? path.normalize(folder)
-        : path.resolve(workspaceRoot, folder);
-}
+
 
 /**
  * Scans configured folders and returns matching files with normalized metadata
@@ -24,6 +21,7 @@ function resolveScanFolderPath(workspaceRoot: string, folder: string): string {
 export async function getFiles(scanFolders: string[], extensions: string[] = []): Promise<IFileItem[]> {
     let allFiles: IFileItem[] = [];
     try {
+
         const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
         if (!workspaceRoot) {
             logLine('[FILES] ❌ Error: No workspace folder open!');
@@ -31,11 +29,25 @@ export async function getFiles(scanFolders: string[], extensions: string[] = [])
             return [];
         }
 
+
+
         //outputChannel.appendLine(`[FILES] Scanning workspace: ${workspaceRoot}`);
 
         for (const folder of scanFolders) {
-            const targetFolder = resolveScanFolderPath(workspaceRoot, folder);
-            const pattern = new vscode.RelativePattern(targetFolder, `**/*.{${extensions.join(',')}}`);
+            const uri = vscode.Uri.file(folder);
+            const rootFolder = vscode.workspace.getWorkspaceFolder(uri);
+
+            if (!rootFolder) {
+                console.warn('Folder is outside workspace:', folder);
+                return [];
+            }
+
+            let relative = path.relative(rootFolder.uri.fsPath, folder);
+            const patternPath = relative ? `${relative}/**/*` : '**/*';
+            const pattern = new vscode.RelativePattern(rootFolder, patternPath);
+
+            //const targetFolder = resolveScanFolderPath(workspaceRoot, folder);
+            //const pattern = new vscode.RelativePattern(targetFolder, `**/*.{${extensions.join(',')}}`);
             const files = await vscode.workspace.findFiles(
                 pattern, '**/*.{metadata,cmd,ini}'
             );
@@ -101,10 +113,10 @@ export async function getMetadataFiles(files: IFileItem[]): Promise<IFileItem[]>
  * Watches multiple folders and appends file-system change events to the
  * provided collection.
  */
-export function watchFoldersAndCollectChanges(
+export async function watchFoldersAndCollectChanges(
     scanFolders: string[],
     extensions: string[]
-): vscode.Disposable {
+): Promise<vscode.Disposable> {
     const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
     if (!workspaceRoot) {
         logLine('[WATCH] ❌ Error: No workspace folder open!');
@@ -125,7 +137,6 @@ export function watchFoldersAndCollectChanges(
         if (normalizedExtensions.size > 0 && !normalizedExtensions.has(fileExt)) {
             return;
         }
-
         let modified = new Date();
         if (changeType !== 'deleted') {
             try {
@@ -139,16 +150,38 @@ export function watchFoldersAndCollectChanges(
         fileChanges.push({
             path: filePath,
             modified,
-            filter: path.join(path.dirname(filePath), path.basename(filePath, path.extname(filePath))).toLowerCase(),
+            filter: filePath,
             changeType
         });
         logLine(`[WATCH] ${changeType.toUpperCase()}: ${filePath}`);
     };
 
+    //const manager = new WatcherManager();
+
+
     for (const folder of scanFolders) {
-        const targetFolder = resolveScanFolderPath(workspaceRoot, folder);
+
+        const uri = vscode.Uri.file(folder);
+        const rootFolder = vscode.workspace.getWorkspaceFolder(uri);
+
+        if (!rootFolder) {
+            console.warn('Folder is outside workspace:', folder);
+            continue;
+        }
+
+        // Convert absolute → relative
+        let relative = path.relative(rootFolder.uri.fsPath, folder);
+        // Normalize for VS Code glob patterns
+        relative = relative.replace(/\\/g, '/');
+
+        // Handle case where folder === root
+        const patternPath = relative ? `${relative}/**/*` : '**/*';
+        const pattern = new vscode.RelativePattern(rootFolder, patternPath);
+
+        //const targetFolder = resolveScanFolderPath(workspaceRoot, folder);
+        //await manager.add(targetFolder);
         //const pattern = new vscode.RelativePattern(targetFolder, `**/*.{${extensions.join(',')}}`);
-        const pattern = new vscode.RelativePattern(targetFolder, `**/*`);
+        //const pattern = new vscode.RelativePattern(targetFolder, `**/*`);
         const watcher = vscode.workspace.createFileSystemWatcher(pattern, false, false, false);
 
         watcher.onDidCreate((uri) => addChange(uri, 'created'));
@@ -156,7 +189,7 @@ export function watchFoldersAndCollectChanges(
         watcher.onDidDelete((uri) => addChange(uri, 'deleted'));
 
         watchers.push(watcher);
-        logLine(`[WATCH] Monitoring folder: ${targetFolder}`);
+        logLine(`[WATCH] Monitoring folder: ${folder}`);
     }
 
     return new vscode.Disposable(() => {
@@ -164,4 +197,6 @@ export function watchFoldersAndCollectChanges(
             watcher.dispose();
         }
     });
+
+    //return manager;
 }

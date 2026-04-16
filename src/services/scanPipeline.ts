@@ -5,6 +5,7 @@ import { fileChanges, getFiles, getMetadataFiles, IFileChangeEvent, watchFolders
 import { processFiles } from './processFiles';
 import { logLine } from './logger';
 
+
 interface IScanPipelineOptions {
     scanFolders: string[];
     scanExtensions: string[];
@@ -43,11 +44,13 @@ export async function runScanPipeline(options: IScanPipelineOptions): Promise<vo
                 logLine(`[ERROR] ❌ Failed to create metadata for ${fileData.path}: ${error}`);
             }
         }
-
-        const watchers = watchFoldersAndCollectChanges(options.scanFolders, options.scanExtensions);
-        await processFiles(filesToProcess);
-        watchers.dispose();
-
+        if (filesToProcess.length > 0) {
+            const watchers = await watchFoldersAndCollectChanges(options.scanFolders, options.scanExtensions);
+            await processFiles(filesToProcess);
+            await sleep(1000);
+            await watchers.dispose();
+        }
+        
         const updateFiles = fileChanges.filter((change: IFileChangeEvent) =>
             !filesToProcess.some((processed: IFileItem) => processed.path === change.path)
         );
@@ -71,3 +74,7 @@ export async function runScanPipeline(options: IScanPipelineOptions): Promise<vo
     const duration = Date.now() - startTime;
     logLine(`[SCAN] Completed in ${duration}ms at ${new Date().toISOString()}`);
 }
+function sleep(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
