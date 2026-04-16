@@ -1,4 +1,4 @@
 export interface Dot8AssetManagerConfig {
-    scanFolders: string[];
+    scanFolders: string[],
     scanExtensions: string[];
 }

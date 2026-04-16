@@ -21,25 +21,19 @@ export const fileChanges: IFileChangeEvent[] = [];
 export async function getFiles(scanFolders: string[], extensions: string[] = []): Promise<IFileItem[]> {
     let allFiles: IFileItem[] = [];
     try {
-
         const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
         if (!workspaceRoot) {
             logLine('[FILES] ❌ Error: No workspace folder open!');
             vscode.window.showErrorMessage('No workspace folder open!');
             return [];
         }
-
-
-
-        //outputChannel.appendLine(`[FILES] Scanning workspace: ${workspaceRoot}`);
-
         for (const folder of scanFolders) {
             const uri = vscode.Uri.file(folder);
             const rootFolder = vscode.workspace.getWorkspaceFolder(uri);
 
             if (!rootFolder) {
-                console.warn('Folder is outside workspace:', folder);
-                return [];
+                logLine(`[FILES] ⚠️ Folder is outside workspace: ${folder}`);
+                continue;
             }
 
             let relative = path.relative(rootFolder.uri.fsPath, folder);

@@ -5,7 +5,7 @@ import { Dot8AssetManagerConfig } from './dot8AssetManagerConfig';
 
 
 // Global config instance
-export let config: Dot8AssetManagerConfig = loadConfig();
+export let config: Dot8AssetManagerConfig;
 
 /**
  * Loads extension settings from the current workspace configuration.
@@ -16,9 +16,12 @@ function loadConfig(): Dot8AssetManagerConfig {
     console.log('Loading config:');
     console.log('rootFolder:', cfg.rootPath);
 
+        const Folders: string = cfg.get<string>("ScanFolders","");
+        const Extensions: string = cfg.get<string>("ScanExtensions","");
+
     return {
-        scanFolders: cfg.ScanFolders,
-        scanExtensions: cfg.ScanExtensions,
+        scanFolders: Folders.split(","),
+        scanExtensions: Extensions.split(",")
     };
 }
 

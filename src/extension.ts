@@ -12,19 +12,21 @@ export let outputChannel: vscode.OutputChannel;
  * registers command handlers.
  */
 export async function activate(context: vscode.ExtensionContext) {
-    watchConfig(context); // auto-reload on settings change
-    reloadConfig();
     console.log("Just getting started...");
-    outputChannel = vscode.window.createOutputChannel("dot8assetmanager");
-    setLoggerChannel(outputChannel);
-
     registerUpdateChangedCommand(context);
     registerUpdateAllCommand(context);
 
+    outputChannel = vscode.window.createOutputChannel("dot8assetmanager");
+    setLoggerChannel(outputChannel);    
+
+
+    watchConfig(context); // auto-reload on settings change
+    reloadConfig();
+
     outputChannel.appendLine("Extension activated");
     outputChannel.appendLine("Current Settings:");
-    outputChannel.appendLine(`Scan Folders: \r\n${config.scanFolders.join("\r\n")}`); 
-    outputChannel.appendLine(`Scan Extensions: \r\n${config.scanExtensions.join("\r\n")}`); 
+    outputChannel.appendLine(`Scan Folders: \r\n${config.scanFolders}`); 
+    outputChannel.appendLine(`Scan Extensions: \r\n${config.scanExtensions}`); 
 }
 
 /**

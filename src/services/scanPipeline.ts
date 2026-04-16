@@ -17,7 +17,7 @@ export async function runScanPipeline(options: IScanPipelineOptions): Promise<vo
     vscode.window.showInformationMessage('start scanning...');
     const startTime = Date.now();
     logLine(`[SCAN] Starting ${options.startLabel} at ${new Date().toISOString()}`);
-    logLine(`[SCAN] Scanning folder: ${options.scanFolders}`);
+    logLine(`[SCAN] Scanning folder(s): ${options.scanFolders.join("\r\n")}`);
 
     let files = await getFiles(options.scanFolders, options.scanExtensions);
     let pass = 1;
