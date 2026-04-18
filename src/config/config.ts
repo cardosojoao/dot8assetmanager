@@ -1,8 +1,8 @@
 // config.ts
 import * as vscode from 'vscode';
 import { Dot8AssetManagerConfig } from './dot8AssetManagerConfig';
-
-
+import { loadLoggerConfig, LogFilter, Logger, OutputRouter, initializeLogger, logger } from '../services/logger';
+import { TimerManager } from '../services/timer';
 
 // Global config instance
 export let config: Dot8AssetManagerConfig;
@@ -12,16 +12,25 @@ export let config: Dot8AssetManagerConfig;
  */
 function loadConfig(): Dot8AssetManagerConfig {
     const cfg = vscode.workspace.getConfiguration('dot8assetmanager');
+    const logConfig = loadLoggerConfig();
 
     console.log('Loading config:');
     console.log('rootFolder:', cfg.rootPath);
 
-        const Folders: string = cfg.get<string>("ScanFolders","");
-        const Extensions: string = cfg.get<string>("ScanExtensions","");
+    const Folders: string = cfg.get<string>("ScanFolders", "");
+    const Extensions: string = cfg.get<string>("ScanExtensions", "");
+
+    logger?.dispose();
+    const router = new OutputRouter();
+    const filter = new LogFilter(logConfig);
+    const timer = new TimerManager();
+    initializeLogger(router, filter, timer, logConfig);
+
 
     return {
         scanFolders: Folders.split(","),
-        scanExtensions: Extensions.split(",")
+        scanExtensions: Extensions.split(","),
+        logLevel: logConfig.level
     };
 }
 
@@ -50,12 +59,12 @@ export function watchConfig(context: vscode.ExtensionContext): void {
 /**
  * Persists the current in-memory configuration to workspace-folder settings.
  */
-export async function saveConfig():Promise<void> {
+export async function saveConfig(): Promise<void> {
     const cfg = vscode.workspace.getConfiguration(
         'dot8assetmanager',
         vscode.workspace.workspaceFolders?.[0]?.uri
     );
 
-    await cfg.update('scanFolders', config.scanFolders,  vscode.ConfigurationTarget.WorkspaceFolder);
-    await cfg.update('scanExtensions', config.scanExtensions,  vscode.ConfigurationTarget.WorkspaceFolder);
+    await cfg.update('scanFolders', config.scanFolders, vscode.ConfigurationTarget.WorkspaceFolder);
+    await cfg.update('scanExtensions', config.scanExtensions, vscode.ConfigurationTarget.WorkspaceFolder);
 }

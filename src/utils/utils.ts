@@ -2,7 +2,6 @@ import path from "path";
 import fs from "fs";
 import { IMetadata } from "../models/IMetadata";
 import { execSync } from "child_process";
-import * as vscode from 'vscode';
 import { logger } from "../services/logger";
 /**
  * Returns a file path with the same base name and a different extension.

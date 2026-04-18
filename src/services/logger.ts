@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { TimerManager } from './timer';
-import { changeExtension } from '../utils/utils';
 
 export let logger: Logger;
 

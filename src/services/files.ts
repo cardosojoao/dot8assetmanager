@@ -3,8 +3,8 @@ import fs from 'fs';
 import path from 'path';
 import { IFileItem } from '../models/IFileItem';
 import { appendExtension, changeExtension } from '../utils/utils';
-import { logLine } from './logger';
-//import { WatcherManager } from './watcher';
+import { logger } from '../services/logger';
+
 
 export interface IFileChangeEvent extends IFileItem {
     changeType: 'created' | 'changed' | 'deleted';
@@ -23,7 +23,7 @@ export async function getFiles(scanFolders: string[], extensions: string[] = [])
     try {
         const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
         if (!workspaceRoot) {
-            logLine('[FILES] ❌ Error: No workspace folder open!');
+            logger.error('[FILES] ❌ Error: No workspace folder open!');
             vscode.window.showErrorMessage('No workspace folder open!');
             return [];
         }
@@ -32,7 +32,7 @@ export async function getFiles(scanFolders: string[], extensions: string[] = [])
             const rootFolder = vscode.workspace.getWorkspaceFolder(uri);
 
             if (!rootFolder) {
-                logLine(`[FILES] ⚠️ Folder is outside workspace: ${folder}`);
+                logger.warn(`[FILES] ⚠️ Folder is outside workspace: ${folder}`);
                 continue;
             }
 
@@ -57,13 +57,13 @@ export async function getFiles(scanFolders: string[], extensions: string[] = [])
                         //filter: path.join(path.dirname(pathFile), path.basename(pathFile, path.extname(pathFile))).toLowerCase()
                     };
                 } catch (error) {
-                    logLine(`[FILES] ⚠️ Warning: Failed to stat ${file.fsPath}: ${error instanceof Error ? error.message : String(error)}`);
+                    logger.warn(`[FILES] ⚠️ Warning: Failed to stat ${file.fsPath}: ${error instanceof Error ? error.message : String(error)}`);
                     throw error;
                 }
             }));
         }
     } catch (error) {
-        logLine(`[FILES] ❌ Fatal error scanning files: ${error instanceof Error ? error.message : String(error)}`);
+        logger.error(`[FILES] ❌ Fatal error scanning files: ${error instanceof Error ? error.message : String(error)}`);
         throw error;
     }
 
@@ -92,10 +92,10 @@ export async function getMetadataFiles(files: IFileItem[]): Promise<IFileItem[]>
                     //filter: path.join(path.dirname(parsed.Path), path.basename(parsed.Path, path.extname(parsed.Path))).toLowerCase()
                 });
             } else {
-                logLine(`[METADATA] No metadata file for: ${fileData.path}`);
+                logger.warn(`[METADATA] No metadata file for: ${fileData.path}`);
             }
         } catch (error) {
-            logLine(`[METADATA] ❌ Error processing ${fileData.path}: ${error instanceof Error ? error.message : String(error)}`);
+            logger.error(`[METADATA] ❌ Error processing ${fileData.path}: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
 
@@ -113,7 +113,7 @@ export async function watchFoldersAndCollectChanges(
 ): Promise<vscode.Disposable> {
     const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
     if (!workspaceRoot) {
-        logLine('[WATCH] ❌ Error: No workspace folder open!');
+        logger.error('[WATCH] ❌ Error: No workspace folder open!');
         throw new Error('No workspace folder open!');
     }
 
@@ -147,7 +147,7 @@ export async function watchFoldersAndCollectChanges(
             filter: filePath,
             changeType
         });
-        logLine(`[WATCH] ${changeType.toUpperCase()}: ${filePath}`);
+        logger.debug(`[WATCH] ${changeType.toUpperCase()}: ${filePath}`);
     };
 
     //const manager = new WatcherManager();
@@ -183,7 +183,7 @@ export async function watchFoldersAndCollectChanges(
         watcher.onDidDelete((uri) => addChange(uri, 'deleted'));
 
         watchers.push(watcher);
-        logLine(`[WATCH] Monitoring folder: ${folder}`);
+        logger.debug(`[WATCH] Monitoring folder: ${folder}`);
     }
 
     return new vscode.Disposable(() => {

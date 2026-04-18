@@ -5,8 +5,8 @@ import { changeExtension, findFileUpward, mapMetadataToDictionary, applyMetadata
 import { saveMetadata, getMetadata, updateMetadataType, getMetadataGeneric } from './metadata';
 import { Action } from '../models/action';
 import path from 'path';
-import * as vscode from 'vscode';
-import { logLine } from './logger';
+import { logger } from '../services/logger';
+
 
 /**
  * Resolves the closest action metadata file for a folder and returns a parsed
@@ -16,13 +16,13 @@ export async function getActionMetadata(folder: string): Promise<Action | null> 
     try {
         const actionPath = findFileUpward(folder, 'action.metadata');
         if (actionPath !== null) {
-            logLine(`[ACTION] Found action file: ${actionPath}`);
+            logger.info(`[ACTION] Found action file: ${actionPath}`);
             return Action.fromFile(actionPath);
         } else {
-            logLine(`[ACTION] ⚠️ No action file found for ${folder}`);
+            logger.warn(`[ACTION] ⚠️ No action file found for ${folder}`);
         }
     } catch (error) {
-        logLine(`[ACTION] ❌ Fatal error processing ${folder}: ${error instanceof Error ? error.message : String(error)}`);
+        logger.error(`[ACTION] ❌ Fatal error processing ${folder}: ${error instanceof Error ? error.message : String(error)}`);
     }
     return null;
 }
@@ -35,7 +35,7 @@ export async function executeAction(action: Action, file: IFileItem): Promise<vo
 
     try {
         const steps = action.getStepsForFile(file.path);
-        logLine(`[ACTION] Found ${steps.length} steps to execute`);
+        logger.debug(`[ACTION] Found ${steps.length} steps to execute`);
 
         let metaData = await getMetadata(file.path);
         metaData = updateMetadataType(metaData, file.path) as IMetadata;
@@ -48,7 +48,7 @@ export async function executeAction(action: Action, file: IFileItem): Promise<vo
 
 
         for (const step of steps) {
-            logLine(`[STEP] Executing: ${step.name}`);
+            logger.debug(`[STEP] Executing: ${step.name}`);
             const metadataDictStep: Record<string, string> = {};
 
             if (step.metadata !== undefined && step.metadata.length > 0) {
@@ -90,13 +90,13 @@ export async function executeAction(action: Action, file: IFileItem): Promise<vo
                 const fullCommand = `${step.command} ${args.join(' ')}`;
                 const stepSuccess = executeFile(step.command, args.join(' '), workingDir);
                 if (!stepSuccess) {
-                    logLine(`[STEP] ❌ Step failed: ${step.name}`);
+                    logger.error(`[STEP] ❌ Step failed: ${step.name}`);
                     allStepsResult = false;
                     break;
                 }
-                logLine(`[STEP] ✅  Step succeeded: ${step.name}`);
+                logger.debug(`[STEP] ✅  Step succeeded: ${step.name}`);
             } catch (error) {
-                logLine(`[STEP] ❌ Step error: ${error instanceof Error ? error.message : String(error)}`);
+                logger.error(`[STEP] ❌ Step error: ${error instanceof Error ? error.message : String(error)}`);
                 allStepsResult = false;
                 break;
             }
@@ -107,12 +107,12 @@ export async function executeAction(action: Action, file: IFileItem): Promise<vo
             const metadataPath = appendExtension(file.path, 'metadata');
             metaData.Modified = now.toISOString();
             saveMetadata(metaData, metadataPath);
-            logLine(`[ACTION] ✅  All steps completed, metadata updated at ${now.toISOString()}`);
+            logger.debug(`[ACTION] ✅  All steps completed, metadata updated at ${now.toISOString()}`);
         } else {
-            logLine(`[ACTION] ❌ Action failed, metadata not updated`);
+            logger.error(`[ACTION] ❌ Action failed, metadata not updated`);
         }
     } catch (error) {
-        logLine(`[ACTION] ❌ Fatal error executing action for ${file.path}: ${error instanceof Error ? error.message : String(error)}`);
+        logger.error(`[ACTION] ❌ Fatal error executing action for ${file.path}: ${error instanceof Error ? error.message : String(error)}`);
     }
 }
 

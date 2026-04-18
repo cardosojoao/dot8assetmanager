@@ -2,7 +2,7 @@
   "name": "dot8assetmanager",
   "displayName": "dot8 asset manager",
   "description": "Dot 8 Engine asset manager",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "icon": "images/logo_black.png",
   "repository": {
     "type": "git",
@@ -34,7 +34,14 @@
           "default": "",
           "description": "File extensions to be scanned for assets.",
           "scope": "window"
+        },
+        "dot8assetmanager.LogLevel": {
+          "type": "string",
+          "default": "info",
+          "description": "Log level.",
+          "scope": "window"
         }
+
       }
     },
     "commands": [

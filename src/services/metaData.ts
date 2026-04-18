@@ -4,7 +4,6 @@ import { version } from '../../package.json';
 import { readTileSet } from '../services/tileSet';
 import { appendExtension, getMetadataFilePath, getPatternDimensions } from '../utils/utils';
 import { IMetadata } from '../models/IMetadata';
-import { IFileItem } from '../models/IFileItem';
 
 const GENERATED_BY = `Dot8-MetadataUpdate-${version}`;
 
