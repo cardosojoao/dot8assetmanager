@@ -2,7 +2,7 @@ import { Action } from "../models/action";
 import { IFileItem } from "../models/IFileItem";
 import * as Path from "path";
 import { executeAction, getActionMetadata } from "./actionExecute";
-import { logLine } from "./logger";
+import { logger } from "../services/logger";
 
 /**
  * Groups files by folder, resolves the nearest action metadata, and executes
@@ -18,7 +18,7 @@ export async function processFiles(files: IFileItem[]): Promise<void> {
 
     // get the action for folder
     for (const folder in grouped) {
-        logLine(`[ACTION] Processing folder: ${folder}`);
+        logger.info(`[ACTION] Processing folder: ${folder}`);
         const action: Action | null = await getActionMetadata(folder);
         if (action === null) {
             continue;
@@ -45,12 +45,12 @@ export async function processFiles(files: IFileItem[]): Promise<void> {
         });
 
         for (const file of orderedFiles) {
-            logLine(`[ACTION] Processing file: ${file?.path}`);
+            logger.debug(`[ACTION] Processing file: ${file?.path}`);
             try {
             
                 await executeAction(<Action>action, <IFileItem>file);
             } catch (error) {
-                logLine(`[ERROR] ❌ Failed to process file ${file?.path}: ${error}`);
+                logger.error(`[ERROR] ❌ Failed to process file ${file?.path}: ${error}`);
             }
         }
     }

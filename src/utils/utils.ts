@@ -3,7 +3,7 @@ import fs from "fs";
 import { IMetadata } from "../models/IMetadata";
 import { execSync } from "child_process";
 import * as vscode from 'vscode';
-import { logLine } from "../services/logger";
+import { logger } from "../services/logger";
 /**
  * Returns a file path with the same base name and a different extension.
  */
@@ -135,19 +135,19 @@ export function applyMetadataToArgument(argument: string, dictionary: Record<str
 export const executeFile = (filePath: string, parameters: string, workingDirectory: string = ''): boolean => {
     const cmd = `${filePath} ${parameters}`;
     try {
-        logLine(`[EXEC] Running: ${cmd}`);
+        logger.debug(`[EXEC] Running: ${cmd}`);
         const output = execSync(cmd, {
             encoding: 'utf-8',
             cwd: workingDirectory,
             stdio: ['pipe', 'pipe', 'pipe']
         });
-        logLine(`[EXEC] Output: ${output.trim()}`);
+        logger.debug(`[EXEC] Output: ${output.trim()}`);
         return true;
     } catch (error: unknown) {
         const errorObj = error as { stderr?: string; message?: string; code?: number };
         const stderr = errorObj.stderr || errorObj.message || String(error);
         const code = errorObj.code || 'UNKNOWN';
-        logLine(`[EXEC] Failed with code ${code}: ${stderr.trim()}`);
+        logger.error(`[EXEC] Failed with code ${code}: ${stderr.trim()}`);
         return false;
     }
 };
