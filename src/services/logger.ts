@@ -17,7 +17,7 @@ export enum LogLevel {
 }
 
 export function loadLoggerConfig(): LoggerConfig {
-    const cfg = vscode.workspace.getConfiguration("spriteEngine");
+    const cfg = vscode.workspace.getConfiguration("dot8assetmanager");
 
     type LogLevelKey = "silent" | "error" | "warning" | "warn" | "info" | "debug" | "trace";
     const levelMap: Record<LogLevelKey, LogLevel> = {

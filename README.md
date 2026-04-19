@@ -31,7 +31,7 @@ It scans configured folders, creates sidecar metadata files, and executes action
 | --- | --- | --- | --- |
 | dot8assetmanager.ScanFolders | string | "" | Comma-separated folder paths to scan for assets (e.g., `D:/assets,D:/sprites`). |
 | dot8assetmanager.ScanExtensions | string | "" | Comma-separated file extensions to include (e.g., `.png,.tsx,.afb,.pt3`). |
-| spriteEngine.logLevel | string | "info" | Logging level: `silent`, `error`, `warning`, `info`, `debug`, or `trace`. |
+| spriteEngine.logLevel | enum | "info" | Log level: `silent`, `error`, `warning`, `info`, `debug`, or `trace`. |
 
 Example workspace settings.json:
 

@@ -35,10 +35,26 @@
           "description": "File extensions to be scanned for assets.",
           "scope": "window"
         },
-        "dot8assetmanager.LogLevel": {
+        "dot8assetmanager.logLevel": {
           "type": "string",
           "default": "info",
-          "description": "Log level.",
+          "enum": [
+            "silent",
+            "error",
+            "warning",
+            "info",
+            "debug",
+            "trace"
+          ],
+          "enumDescriptions": [
+            "No logging output",
+            "Only error messages",
+            "Error and warning messages",
+            "Error, warning, and info messages",
+            "Error, warning, info, and debug messages",
+            "All messages including trace information"
+          ],
+          "description": "Log level for extension output.",
           "scope": "window"
         }
 
