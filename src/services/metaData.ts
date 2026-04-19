@@ -43,6 +43,7 @@ export function updateMetadataType(metadata: IMetadata, filePath: string): IMeta
             update = updateGeneric(metadata, filePath);
             break;
         default:
+            update = updateGeneric(metadata, filePath);
             break;
     }
     return update;
@@ -97,8 +98,6 @@ function updatePattern(metadata: IMetadata, filePath: string): IMetadata {
  * Updates metadata fields for generic file types.
  */
 function updateGeneric(metadata: IMetadata, filePath: string): IMetadata {
-    //const metadataPath = getMetadataFilePath(metadata.Path);
-
     metadata.GeneratedBy = GENERATED_BY;
     metadata.Path = filePath;
     return metadata;

@@ -34,7 +34,7 @@ export async function processFiles(files: IFileItem[]): Promise<void> {
                     .filter(ext => ext) // skip files with no extension, remove if you want to keep them
             )
         );
-        // merget action order extension and add existing extensions in folder, to ensure we process files in the order defined by action.extensionOrder, but also include any extensions that are present in the folder but not defined in action.extensionOrder (these will be processed last)
+        // merge action order extension and add existing extensions in folder, to ensure we process files in the order defined by action.extensionOrder, but also include any extensions that are present in the folder but not defined in action.extensionOrder (these will be processed last)
         const processingExtensions = Array.from(new Set([...action.extensionOrder, ...uniqueExtensions]));
 
         const orderedFiles: IFileItem[] = [];

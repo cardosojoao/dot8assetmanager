@@ -157,7 +157,6 @@ export async function watchFoldersAndCollectChanges(
         let relative = path.relative(rootFolder.uri.fsPath, folder);
         // Normalize for VS Code glob patterns
         relative = relative.replace(/\\/g, '/');
-
         // Handle case where folder === root
         const patternPath = relative ? `${relative}/**/*` : '**/*';
         const pattern = new vscode.RelativePattern(rootFolder, patternPath);

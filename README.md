@@ -29,24 +29,28 @@ It scans configured folders, creates sidecar metadata files, and executes action
 
 | Setting | Type | Default | Description |
 | --- | --- | --- | --- |
-| dot8assetmanager.ScanFolders | string[] | [] | Folder paths to scan for assets. |
-| dot8assetmanager.ScanExtensions | string[] | [] | File extensions to include (for example .png, .tsx, .afb). |
+| dot8assetmanager.ScanFolders | string | "" | Comma-separated folder paths to scan for assets (e.g., `D:/assets,D:/sprites`). |
+| dot8assetmanager.ScanExtensions | string | "" | Comma-separated file extensions to include (e.g., `.png,.tsx,.afb,.pt3`). |
+| spriteEngine.logLevel | string | "info" | Logging level: `silent`, `error`, `warning`, `info`, `debug`, or `trace`. |
 
 Example workspace settings.json:
 
 ```json
 {
-  "dot8assetmanager.ScanFolders": [
-    "D:/projects/mygame/assets"
-  ],
-  "dot8assetmanager.ScanExtensions": [
-    ".png",
-    ".tsx",
-    ".afb",
-    ".pt3"
-  ]
+  "dot8assetmanager.ScanFolders": "D:/projects/mygame/assets,D:/projects/mygame/sprites",
+  "dot8assetmanager.ScanExtensions": ".png,.tsx,.afb,.pt3",
+  "spriteEngine.logLevel": "debug"
 }
 ```
+
+### Important: Scan Folders Must Be Within the Workspace
+
+All folders specified in `ScanFolders` **must be within the current VS Code workspace**. The extension scans the workspace file system and cannot access folders outside the workspace boundaries. If a folder is outside the workspace, it will be skipped with a debug log message.
+
+To include a folder:
+1. Ensure it is part of your workspace (either in the workspace folder or a nested subdirectory)
+2. Provide the path relative to the workspace root or as an absolute path within the workspace
+3. The extension will validate folder accessibility during scanning
 
 ## action.metadata schema
 
@@ -95,9 +99,9 @@ Example action.metadata:
       "steps": [
         {
           "name": "convert-png",
-          "command": "convert",
-          "workingDirectory": "${directory}",
           "metadata": ["pipeline.vars.json"],
+          "workingDirectory": "${directory}",
+          "command": "convert",
           "args": [
             "${file}",
             "${filewithoutextension}.out.png"
@@ -122,6 +126,7 @@ Example action.metadata:
 
 These placeholders are replaced in args and workingDirectory:
 
+### Standard metadata variables
 - ${generatedBy}
 - ${enabled}
 - ${name}
@@ -135,7 +140,13 @@ These placeholders are replaced in args and workingDirectory:
 - ${height}
 - ${filewithoutextension}
 - ${directory}
-- ${trigger}
+
+### Trigger variables
+- ${trigger} - The full path of the physical file that triggered the event
+- ${triggerwithoutextension} - The trigger file path without its extension
+- ${triggerfolder} - The directory containing the trigger file
+
+**Important**: The trigger is always the physical file that was changed and initiated the processing event. The file being processed (${file}) could be the trigger file itself, or it could be a different file whose metadata is derived from or referenced by the trigger file's metadata. For example, when a .tsx tileset file is modified, (${file}) metadata it might reference the .png sprite assets that the tileset references in its metadata.
 
 Notes:
 
@@ -144,15 +155,63 @@ Notes:
 
 ## step.metadata behavior
 
-Each entry in step.metadata is loaded before argument substitution:
+Each entry in step.metadata is loaded before argument substitution. This allows steps to reference additional metadata files that provide extra placeholder variables.
 
-- If entry starts with . (example .sprite.metadata):
-  - Treated as an extension and resolved relative to the input file path
-  - Example: C:/a/sprite.png + .sprite.metadata => C:/a/sprite.sprite.metadata
-- Otherwise:
-  - If it looks like a file name, it is resolved in the asset directory
-  - If it looks like a path, it is used directly
-  - File content must be JSON object and is merged as extra placeholder keys
+### Metadata resolution modes
+
+#### 1. Extension-based metadata (starts with .)
+
+If an entry starts with a dot (.), it is treated as an **additional extension** and appended to the asset file path:
+
+- Example: `.sprite.metadata` with asset `C:/assets/sprite.png` → loads `C:/assets/sprite.sprite.metadata`
+- Example: `.vars.json` with asset `C:/assets/image.tsx` → loads `C:/assets/image.vars.json`
+
+This is useful for asset-specific metadata files that follow the same naming convention as the asset itself.
+
+#### 2. File name-based metadata (no path separators)
+
+If an entry looks like a file name (no forward slashes), it is resolved **in the same folder** as the asset:
+
+- Example: `pipeline.vars.json` with asset `C:/assets/image.png` → loads `C:/assets/pipeline.vars.json`
+- Example: `config.json` → loads from the asset's directory
+
+This is useful for shared metadata files that apply to all assets in a folder.
+
+#### 3. Path-based metadata (contains path separators)
+
+If an entry contains path separators, it is used as a direct file path:
+
+- Treated as a relative or absolute path
+- Allows referencing metadata from outside the asset folder
+
+### Metadata file format
+
+All referenced metadata files must contain valid JSON. The JSON object is parsed and merged as additional placeholder keys available for argument substitution:
+
+```json
+{
+  "customVar": "value",
+  "outputDir": "out",
+  "quality": "high"
+}
+```
+
+These values are then available as `${customVar}`, `${outputDir}`, `${quality}` in step arguments and workingDirectory.
+
+### Example usage
+
+```json
+{
+  "name": "process-with-metadata",
+  "command": "convert",
+  "args": ["${file}", "-o", "${outputDir}/${filewithoutextension}.out.png"],
+  "metadata": [
+    ".config.json",           // Load sprite.config.json (asset-specific)
+    "global-settings.json",   // Load from same folder as asset
+    "src/defaults.json"       // Load from src/defaults.json
+  ]
+}
+```
 
 ## Metadata output behavior
 

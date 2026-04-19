@@ -14,7 +14,6 @@ interface IScanPipelineOptions {
 }
 
 export async function runScanPipeline(options: IScanPipelineOptions): Promise<void> {
-    vscode.window.showInformationMessage('start scanning...');
     const startTime = Date.now();
     logger.info(`[SCAN] Starting ${options.startLabel} at ${new Date().toISOString()}`);
     logger.debug(`[SCAN] Scanning folder(s): ${options.scanFolders.join("\r\n")}`);
@@ -56,7 +55,7 @@ export async function runScanPipeline(options: IScanPipelineOptions): Promise<vo
         );
 
         fileChanges.splice(0, fileChanges.length);
-        vscode.window.showInformationMessage(`Scan Pass ${pass} complete: ${unmatched.length} new, ${filesToProcess.length} updated`);
+        logger.info(`[SCAN] Pass ${pass} complete: ${unmatched.length} new, ${filesToProcess.length} updated`);
 
         if (updateFiles.length === 0) {
             break;

@@ -38,10 +38,11 @@ export async function executeAction(action: Action, file: IFileItem): Promise<vo
 
         let metaData = await getMetadata(file.path);
         metaData = updateMetadataType(metaData, file.path) as IMetadata;
-        //saveMetadata(metaData,getMetadataFilePath(metaData.Path));
         const metaDataDict: Record<string, string> = {};
         mapMetadataToDictionary(metaDataDict, metaData as IMetadata);
         metaDataDict['trigger'] = file.path;
+        metaDataDict['triggerwithoutextension'] = changeExtension(file.path, '');
+        metaDataDict['triggerfolder'] =  path.dirname(file.path);
         let allStepsResult: boolean = true;
 
 
@@ -81,8 +82,6 @@ export async function executeAction(action: Action, file: IFileItem): Promise<vo
 
             try {
                 const args = step.args.map(arg => applyMetadataToArgument(arg, metaDataDict)).map(arg => applyMetadataToArgument(arg, metadataDictStep));
-                //const args = step.args.map(arg => applyMetadataToArgument(arg, metaDataDict));
-
                 const workingDir = step.workingDirectory
                     ? applyMetadataToArgument(step.workingDirectory, metaDataDict)
                     : path.dirname(file.path);
