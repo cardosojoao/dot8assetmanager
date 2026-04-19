@@ -1,6 +1,6 @@
 import { Action } from "../models/action";
 import { IFileItem } from "../models/IFileItem";
-import * as Path from "path";
+import * as path from "path";
 import { executeAction, getActionMetadata } from "./actionExecute";
 import { logger } from "../services/logger";
 
@@ -10,7 +10,7 @@ import { logger } from "../services/logger";
  */
 export async function processFiles(files: IFileItem[]): Promise<void> {
     const grouped = files.reduce((acc, file) => {
-        const folder = Path.dirname(file.filter);
+        const folder = path.dirname(file.filter);
         if (!acc[folder]) { acc[folder] = []; }
         acc[folder].push(file);
         return acc;
@@ -45,12 +45,11 @@ export async function processFiles(files: IFileItem[]): Promise<void> {
         });
 
         for (const file of orderedFiles) {
-            logger.debug(`[ACTION] Processing file: ${file?.path}`);
+            logger.debug(`[ACTION] Processing file: ${file.path}`);
             try {
-            
-                await executeAction(<Action>action, <IFileItem>file);
+                await executeAction(action, file);
             } catch (error) {
-                logger.error(`[ERROR] ❌ Failed to process file ${file?.path}: ${error}`);
+                logger.error(`[ERROR] ❌ Failed to process file ${file.path}: ${error}`);
             }
         }
     }

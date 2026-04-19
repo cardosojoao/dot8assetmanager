@@ -1,7 +1,6 @@
 import { IFileItem } from '../models/IFileItem';
 import { IMetadata } from '../models/IMetadata';
-import { appendExtension, executeFile, fileExists, getMetadataFilePath, isLikelyFileName } from '../utils/utils';
-import { changeExtension, findFileUpward, mapMetadataToDictionary, applyMetadataToArgument } from '../utils/utils';
+import { appendExtension, executeFile, fileExists, isLikelyFileName, changeExtension, findFileUpward, mapMetadataToDictionary, applyMetadataToArgument } from '../utils/utils';
 import { saveMetadata, getMetadata, updateMetadataType, getMetadataGeneric } from './metadata';
 import { Action } from '../models/action';
 import path from 'path';

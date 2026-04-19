@@ -102,9 +102,6 @@ export class OutputRouter {
 
     constructor() {
         this.channel = vscode.window.createOutputChannel("dot8 asset manager");
-        // this.channels.set(LogChannel.Watcher, vscode.window.createOutputChannel("Sprite Engine - Watcher"));
-        // this.channels.set(LogChannel.Pipeline, vscode.window.createOutputChannel("Sprite Engine - Pipeline"));
-        // this.channels.set(LogChannel.Metadata, vscode.window.createOutputChannel("Sprite Engine - Metadata"));
     }
 
     public write(message: string) {

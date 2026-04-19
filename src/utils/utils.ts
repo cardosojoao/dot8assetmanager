@@ -33,27 +33,6 @@ export const findFileUpward = (startPath: string, fileName: string): string | nu
 /**
  * Maps metadata fields to string placeholders used by action arguments.
  */
-// export function mapMetadataToDictionary(metadata: IMetadata): Record<string, string> {
-//     const dictionary: Record<string, string> = {};
-
-//     dictionary['generatedBy'] = metadata.GeneratedBy;
-//     dictionary['enabled'] = String(metadata.Enabled);
-//     dictionary['name'] = metadata.Name;
-//     dictionary['file'] = metadata.Path;
-//     dictionary['modified'] = metadata.Modified;
-//     dictionary['cellwidth'] = String(metadata.Width);
-//     dictionary['cellheight'] = String(metadata.Height);
-//     dictionary['columns'] = String(metadata.Columns);
-//     dictionary['rows'] = String(metadata.Rows);
-//     dictionary['width'] = String(metadata.Width * metadata.Columns);
-//     dictionary['height'] = String(metadata.Height * metadata.Rows);
-//     dictionary['filewithoutextension'] = changeExtension(metadata.Path, '');
-//     dictionary['directory'] = path.dirname(metadata.Path);          // this could be an issue, the default directory should be taken from the trigger file
-//     return dictionary;
-// }
-
-
-
 export function mapMetadataToDictionary(store: Record<string, string>, metadata: IMetadata): Record<string, string> {
     const dictionary: Record<string, string> = {};
 
@@ -162,24 +141,6 @@ export async function fileExists(file: string): Promise<boolean> {
     return fs.existsSync(file);
 }
 
-export function mergeNoDuplicateKeys(
-    a: Record<string, string>,
-    b: Record<string, string>
-): Record<string, string> {
-    const result = { ...a };
-
-    for (const key in b) {
-        if (!(key in result)) {
-            result[key] = b[key];
-        }
-    }
-
-    return result;
-}
-
-
-
-
 export function isLikelyFileName(input: string): boolean {
     return path.basename(input) === input;
 }
@@ -188,18 +149,9 @@ export function isLikelyFilePath(input: string): boolean {
     return path.dirname(input) !== '.';
 }
 
-export function getPatternDimensions(input: string): [width: number,height:  number] {
-    const fd = fs.openSync(input, "r");
-    // Read first 24 bytes (enough)
-    const buffer = Buffer.alloc(24);
-    fs.readSync(fd, buffer, 0, 24, 0);
-    fs.closeSync(fd);
-    // Validate PNG signature (optional but recommended)
-    const isPng =
-        buffer[0] === 0x89 &&
-        buffer[1] === 0x50 &&
-        buffer[2] === 0x4e &&
-        buffer[3] === 0x47;
+export function getPatternDimensions(input: string): [width: number, height: number] {
+    const buffer = fs.readFileSync(input);
+    const isPng = buffer.toString('hex', 0, 8) === '89504e470d0a1a0a';
     if (!isPng) {
         throw new Error("Not a PNG file");
     }

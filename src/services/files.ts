@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import fs from 'fs';
 import path from 'path';
 import { IFileItem } from '../models/IFileItem';
-import { appendExtension, changeExtension } from '../utils/utils';
+import { appendExtension } from '../utils/utils';
 import { logger } from '../services/logger';
 
 
@@ -40,8 +40,6 @@ export async function getFiles(scanFolders: string[], extensions: string[] = [])
             const patternPath = relative ? `${relative}/**/*` : '**/*';
             const pattern = new vscode.RelativePattern(rootFolder, patternPath);
 
-            //const targetFolder = resolveScanFolderPath(workspaceRoot, folder);
-            //const pattern = new vscode.RelativePattern(targetFolder, `**/*.{${extensions.join(',')}}`);
             const files = await vscode.workspace.findFiles(
                 pattern, '**/*.{metadata,cmd,ini}'
             );
@@ -53,8 +51,7 @@ export async function getFiles(scanFolders: string[], extensions: string[] = [])
                     return {
                         path: pathFile,
                         modified: stat.mtime,
-                        filter: pathFile            // for the files the filter is the same
-                        //filter: path.join(path.dirname(pathFile), path.basename(pathFile, path.extname(pathFile))).toLowerCase()
+                        filter: pathFile
                     };
                 } catch (error) {
                     logger.warn(`[FILES] ⚠️ Warning: Failed to stat ${file.fsPath}: ${error instanceof Error ? error.message : String(error)}`);
@@ -76,11 +73,9 @@ export async function getFiles(scanFolders: string[], extensions: string[] = [])
  */
 export async function getMetadataFiles(files: IFileItem[]): Promise<IFileItem[]> {
     const items: IFileItem[] = [];
-    //outputChannel.appendLine(`[METADATA] Processing ${files.length} files for metadata`);
 
     for (const fileData of files) {
         try {
-            //const fileMetadata = changeExtension(fileData.path, '.metadata');
             const fileMetadata = appendExtension(fileData.path, 'metadata');
             if (fs.existsSync(fileMetadata)) {
                 const raw = await fs.promises.readFile(fileMetadata, 'utf-8');
@@ -89,7 +84,6 @@ export async function getMetadataFiles(files: IFileItem[]): Promise<IFileItem[]>
                     path: parsed.Path,
                     modified: new Date(parsed.Modified),
                     filter: fileData.path
-                    //filter: path.join(path.dirname(parsed.Path), path.basename(parsed.Path, path.extname(parsed.Path))).toLowerCase()
                 });
             } else {
                 logger.debug(`[METADATA] No metadata file for: ${fileData.path}`);
@@ -99,7 +93,6 @@ export async function getMetadataFiles(files: IFileItem[]): Promise<IFileItem[]>
         }
     }
 
-    //outputChannel.appendLine(`[METADATA] Loaded metadata for ${items.length}/${files.length} files`);
     return items;
 }
 
@@ -150,16 +143,13 @@ export async function watchFoldersAndCollectChanges(
         logger.debug(`[WATCH] ${changeType.toUpperCase()}: ${filePath}`);
     };
 
-    //const manager = new WatcherManager();
-
-
     for (const folder of scanFolders) {
 
         const uri = vscode.Uri.file(folder);
         const rootFolder = vscode.workspace.getWorkspaceFolder(uri);
 
         if (!rootFolder) {
-            console.warn('Folder is outside workspace:', folder);
+            logger.debug(`[FILES] ⚠️ Folder is outside workspace: ${folder}`);
             continue;
         }
 
@@ -172,10 +162,6 @@ export async function watchFoldersAndCollectChanges(
         const patternPath = relative ? `${relative}/**/*` : '**/*';
         const pattern = new vscode.RelativePattern(rootFolder, patternPath);
 
-        //const targetFolder = resolveScanFolderPath(workspaceRoot, folder);
-        //await manager.add(targetFolder);
-        //const pattern = new vscode.RelativePattern(targetFolder, `**/*.{${extensions.join(',')}}`);
-        //const pattern = new vscode.RelativePattern(targetFolder, `**/*`);
         const watcher = vscode.workspace.createFileSystemWatcher(pattern, false, false, false);
 
         watcher.onDidCreate((uri) => addChange(uri, 'created'));
@@ -191,6 +177,4 @@ export async function watchFoldersAndCollectChanges(
             watcher.dispose();
         }
     });
-
-    //return manager;
 }

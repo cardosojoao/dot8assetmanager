@@ -14,9 +14,6 @@ function loadConfig(): Dot8AssetManagerConfig {
     const cfg = vscode.workspace.getConfiguration('dot8assetmanager');
     const logConfig = loadLoggerConfig();
 
-    console.log('Loading config:');
-    console.log('rootFolder:', cfg.rootPath);
-
     const Folders: string = cfg.get<string>("ScanFolders", "");
     const Extensions: string = cfg.get<string>("ScanExtensions", "");
 
