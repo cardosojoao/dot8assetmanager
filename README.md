@@ -24,6 +24,7 @@ It scans configured folders, creates sidecar metadata files, and executes action
 | --- | --- | --- |
 | dot8assetmanager.updateChangedAssets | Update Changed Assets | Creates missing metadata, processes changed assets, and updates metadata timestamp only when all action steps succeed. |
 | dot8assetmanager.updateAllAssets | Update All Assets | Scans and processes all matched assets, including metadata creation and action execution. |
+| dot8assetmanager.updateMetadataFromExplorer | Touch Asset Metadata | Updates the timestamp of a .metadata file (available in explorer context menu for .metadata files, excluding action.metadata). |
 
 ## Configuration
 
