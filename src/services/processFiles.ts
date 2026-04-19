@@ -18,7 +18,7 @@ export async function processFiles(files: IFileItem[]): Promise<void> {
 
     // get the action for folder
     for (const folder in grouped) {
-        logger.info(`[ACTION] Processing folder: ${folder}`);
+        logger.debug(`[ACTION] Processing folder: ${folder}`);
         const action: Action | null = await getActionMetadata(folder);
         if (action === null) {
             continue;

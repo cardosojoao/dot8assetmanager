@@ -18,9 +18,9 @@ export async function activate(context: vscode.ExtensionContext) {
     reloadConfig();
 
     logger.info("Extension activated");
-    logger.info("Current Settings:");
-    logger.info(`Scan Folders: \r\n${config.scanFolders}`); 
-    logger.info(`Scan Extensions: \r\n${config.scanExtensions}`); 
+    logger.debug("Current Settings:");
+    logger.debug(`Scan Folders: \r\n${config.scanFolders}`); 
+    logger.debug(`Scan Extensions: \r\n${config.scanExtensions}`); 
 }
 
 /**

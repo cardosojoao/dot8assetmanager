@@ -16,10 +16,10 @@ export async function getActionMetadata(folder: string): Promise<Action | null> 
     try {
         const actionPath = findFileUpward(folder, 'action.metadata');
         if (actionPath !== null) {
-            logger.info(`[ACTION] Found action file: ${actionPath}`);
+            logger.debug(`[ACTION] Found action file: ${actionPath}`);
             return Action.fromFile(actionPath);
         } else {
-            logger.warn(`[ACTION] ⚠️ No action file found for ${folder}`);
+            logger.debug(`[ACTION] ⚠️ No action file found for ${folder}`);
         }
     } catch (error) {
         logger.error(`[ACTION] ❌ Fatal error processing ${folder}: ${error instanceof Error ? error.message : String(error)}`);

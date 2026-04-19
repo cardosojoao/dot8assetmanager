@@ -32,7 +32,7 @@ export async function getFiles(scanFolders: string[], extensions: string[] = [])
             const rootFolder = vscode.workspace.getWorkspaceFolder(uri);
 
             if (!rootFolder) {
-                logger.warn(`[FILES] ⚠️ Folder is outside workspace: ${folder}`);
+                logger.debug(`[FILES] ⚠️ Folder is outside workspace: ${folder}`);
                 continue;
             }
 
@@ -92,7 +92,7 @@ export async function getMetadataFiles(files: IFileItem[]): Promise<IFileItem[]>
                     //filter: path.join(path.dirname(parsed.Path), path.basename(parsed.Path, path.extname(parsed.Path))).toLowerCase()
                 });
             } else {
-                logger.warn(`[METADATA] No metadata file for: ${fileData.path}`);
+                logger.debug(`[METADATA] No metadata file for: ${fileData.path}`);
             }
         } catch (error) {
             logger.error(`[METADATA] ❌ Error processing ${fileData.path}: ${error instanceof Error ? error.message : String(error)}`);
