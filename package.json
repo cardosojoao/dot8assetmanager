@@ -16,7 +16,8 @@
     "Other"
   ],
   "activationEvents": [
-    "onStartupFinished"
+    "onStartupFinished",
+    "onCommand:dot8assetmanager.updateMetadataFromExplorer"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -70,8 +71,22 @@
         "command": "dot8assetmanager.updateAllAssets",
         "title": "Update All Assets",
         "category": "dot8assetmanager"
+      },
+      {
+        "command": "dot8assetmanager.updateMetadataFromExplorer",
+        "title": "Touch Asset Metadata",
+        "category": "dot8assetmanager"
       }
-    ]
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "dot8assetmanager.updateMetadataFromExplorer",
+          "when": "explorerResourceIsFolder == false && resourceExtname == '.metadata'",
+          "group": "navigation"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",

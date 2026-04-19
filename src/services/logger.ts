@@ -29,10 +29,7 @@ export function loadLoggerConfig(): LoggerConfig {
         debug: LogLevel.Debug,
         trace: LogLevel.Trace
     };
-
-    // 🔊 1. Log level
     const levelStr = (cfg.get<string>("logLevel", "info") || "info").toLowerCase();
-    
     const level = levelMap[levelStr as LogLevelKey] ?? LogLevel.Info;
     return {
         level : level

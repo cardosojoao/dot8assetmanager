@@ -3,12 +3,14 @@ import { config, reloadConfig, watchConfig } from './config/config';
 import { logger } from './services/logger';
 import { registerUpdateChangedCommand } from './commands/updateChanged';
 import { registerUpdateAllCommand } from './commands/updateAll';
+import { registerUpdateMetadataCommand } from './commands/updateMetadata';
 
 /**
  * Activates the extension, loads configuration, creates output logging, and
  * registers command handlers.
  */
 export async function activate(context: vscode.ExtensionContext) {
+    registerUpdateMetadataCommand(context);
     registerUpdateChangedCommand(context);
     registerUpdateAllCommand(context);
     watchConfig(context); // auto-reload on settings change
