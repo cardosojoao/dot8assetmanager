@@ -2,7 +2,7 @@
   "name": "dot8assetmanager",
   "displayName": "dot8 asset manager",
   "description": "Dot 8 Engine asset manager",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "icon": "images/logo_black.png",
   "repository": {
     "type": "git",
@@ -16,8 +16,7 @@
     "Other"
   ],
   "activationEvents": [
-    "onStartupFinished",
-    "onCommand:dot8assetmanager.updateMetadataFromExplorer"
+    "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -82,7 +81,7 @@
       "explorer/context": [
         {
           "command": "dot8assetmanager.updateMetadataFromExplorer",
-          "when": "explorerResourceIsFolder == false && resourceExtname == '.metadata'",
+          "when": "explorerResourceIsFolder == false && resourceExtname == '.metadata' && resourceFilename != 'action.metadata'",
           "group": "navigation"
         }
       ]
