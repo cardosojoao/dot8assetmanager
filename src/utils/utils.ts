@@ -145,9 +145,9 @@ export function isLikelyFileName(input: string): boolean {
     return path.basename(input) === input;
 }
 
-export function isLikelyFilePath(input: string): boolean {
-    return path.dirname(input) !== '.';
-}
+// export function isLikelyFilePath(input: string): boolean {
+//     return path.dirname(input) !== '.';
+// }
 
 export function getPatternDimensions(input: string): [width: number, height: number] {
     const buffer = fs.readFileSync(input);

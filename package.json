@@ -81,7 +81,7 @@
       "explorer/context": [
         {
           "command": "dot8assetmanager.updateMetadataFromExplorer",
-          "when": "explorerResourceIsFolder == false && resourceExtname == '.metadata' && resourceFilename != 'action.metadata'",
+          "when": "explorerResourceIsFolder == true || (resourceExtname == '.metadata' && resourceFilename != 'action.metadata')",
           "group": "navigation"
         }
       ]

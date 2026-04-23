@@ -132,6 +132,8 @@ These placeholders are replaced in args and workingDirectory:
 - ${enabled}
 - ${name}
 - ${file}
+- ${filewithoutextension}
+- ${directory}
 - ${modified}
 - ${cellwidth}
 - ${cellheight}
@@ -139,8 +141,6 @@ These placeholders are replaced in args and workingDirectory:
 - ${rows}
 - ${width}
 - ${height}
-- ${filewithoutextension}
-- ${directory}
 
 ### Trigger variables
 - ${trigger} - The full path of the physical file that triggered the event

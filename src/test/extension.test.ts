@@ -22,7 +22,7 @@ function makeMetadata(overrides: Partial<IMetadata> = {}): IMetadata {
         GeneratedBy: 'test',
         Enabled: true,
         Name: 'sprite',
-        Path: '/assets/sprite.png',
+        Path: '/assets/sub/sprite.png',
         Modified: '2026-01-01T00:00:00.000Z',
         Width: 16,
         Height: 16,
@@ -130,9 +130,9 @@ suite('utils.mapMetadataToDictionary', () => {
 
     test('directory key is the dirname of Path', () => {
         const dict : Record<string, string> = {};
-        const md = makeMetadata({ Path: '/assets/sub/sprite.png' });
+        const md = makeMetadata({ Path: '/assets/sprite.png' });
         mapMetadataToDictionary(dict, md);
-        assert.strictEqual(dict['directory'], path.dirname('/assets/sub/sprite.png'));
+        assert.strictEqual(dict['directory'], path.dirname('/assets/sprite.png'));
     });
 });
 

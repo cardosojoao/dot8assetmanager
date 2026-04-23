@@ -38,11 +38,18 @@ export async function executeAction(action: Action, file: IFileItem): Promise<vo
 
         let metaData = await getMetadata(file.path);
         metaData = updateMetadataType(metaData, file.path) as IMetadata;
+        
+        // Skip processing if file is disabled
+        if (metaData.Enabled === false) {
+            logger.debug(`[ACTION] ⏭️  Skipping disabled file: ${file.path}`);
+            return;
+        }
+
         const metaDataDict: Record<string, string> = {};
         mapMetadataToDictionary(metaDataDict, metaData as IMetadata);
         metaDataDict['trigger'] = file.path;
         metaDataDict['triggerwithoutextension'] = changeExtension(file.path, '');
-        metaDataDict['triggerfolder'] =  path.dirname(file.path);
+        metaDataDict['triggerdirectory'] =  path.dirname(file.path);
         let allStepsResult: boolean = true;
 
 
