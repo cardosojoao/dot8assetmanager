@@ -24,13 +24,13 @@ It scans configured folders, creates sidecar metadata files, and executes action
 | --- | --- | --- |
 | dot8assetmanager.updateChangedAssets | Update Changed Assets | Creates missing metadata, processes changed assets, and updates metadata timestamp only when all action steps succeed. |
 | dot8assetmanager.updateAllAssets | Update All Assets | Scans and processes all matched assets, including metadata creation and action execution. |
-| dot8assetmanager.updateMetadataFromExplorer | Touch Asset Metadata | Updates the timestamp of a .metadata file (available in explorer context menu for .metadata files, excluding action.metadata). |
+| dot8assetmanager.updateMetadataFromExplorer | Touch Asset Metadata | Resets the Modified timestamp of .metadata file(s) so they will be reprocessed. Available in the explorer context menu for .metadata files (excluding action.metadata) and for folders (recursively touches all matching metadata files). |
 
 ## Configuration
 
 | Setting | Type | Default | Description |
 | --- | --- | --- | --- |
-| dot8assetmanager.ScanFolders | string | "" | Comma-separated folder paths to scan for assets (e.g., `D:/assets,D:/sprites`). |
+| dot8assetmanager.ScanFolders | string | "" | Comma-separated folder paths to scan for assets (e.g., `/assets,/sprites`). |
 | dot8assetmanager.ScanExtensions | string | "" | Comma-separated file extensions to include (e.g., `.png,.tsx,.afb,.pt3`). |
 | dot8assetmanager.logLevel | enum | "info" | Log level: `silent`, `error`, `warning`, `info`, `debug`, or `trace`. |
 
@@ -38,7 +38,7 @@ Example workspace settings.json:
 
 ```json
 {
-  "dot8assetmanager.ScanFolders": "D:/projects/mygame/assets,D:/projects/mygame/sprites",
+  "dot8assetmanager.ScanFolders": "/assets,/sprites",
   "dot8assetmanager.ScanExtensions": ".png,.tsx,.afb,.pt3",
   "dot8assetmanager.logLevel": "debug"
 }
@@ -60,6 +60,7 @@ No action.metadata file is currently committed in this repository, but the runti
 Required top-level fields:
 
 - name: string
+- enable: boolean
 - steps: IStep[]
 - byExtension: object containing extension keys and a default key
 
@@ -67,6 +68,11 @@ Optional top-level fields:
 
 - description: string
 - extensionOrder: string[] (defines desired file extension processing order; currently declared in type but not enforced by step resolution logic)
+
+Enable behavior:
+
+- `action.metadata.enable: false` disables action execution for that folder and any subfolder that inherits the same nearest `action.metadata` file.
+- A closer `action.metadata` in a child folder overrides the parent folder's action selection.
 
 Step fields used by runtime:
 
@@ -87,6 +93,7 @@ Example action.metadata:
 ```json
 {
   "name": "asset-pipeline",
+  "enable": true,
   "description": "Example pipeline",
   "steps": [
     {
@@ -100,7 +107,7 @@ Example action.metadata:
       "steps": [
         {
           "name": "convert-png",
-          "metadata": ["pipeline.vars.json"],
+          "metadata": ["pipeline.metadata"],
           "workingDirectory": "${directory}",
           "command": "convert",
           "args": [
@@ -132,6 +139,7 @@ These placeholders are replaced in args and workingDirectory:
 - ${enabled}
 - ${name}
 - ${file}
+- ${filewnameithoutextension}
 - ${filewithoutextension}
 - ${directory}
 - ${modified}
@@ -144,8 +152,9 @@ These placeholders are replaced in args and workingDirectory:
 
 ### Trigger variables
 - ${trigger} - The full path of the physical file that triggered the event
+- ${triggernamewithoutextension} - The file  that triggered the event name without extension
 - ${triggerwithoutextension} - The trigger file path without its extension
-- ${triggerfolder} - The directory containing the trigger file
+- ${triggerdirectory} - The directory containing the trigger file
 
 **Important**: The trigger is always the physical file that was changed and initiated the processing event. The file being processed (${file}) could be the trigger file itself, or it could be a different file whose metadata is derived from or referenced by the trigger file's metadata. For example, when a .tsx tileset file is modified, (${file}) metadata it might reference the .png sprite assets that the tileset references in its metadata.
 
@@ -154,29 +163,35 @@ Notes:
 - Unknown placeholders are left unchanged.
 - Values come from the asset .metadata plus optional extra metadata files listed in step.metadata.
 
+## Asset .metadata schema
+
+The generated sidecar file `file.ext.metadata` uses the shape defined by [src/models/IMetadata.ts](src/models/IMetadata.ts).
+
+Important field behavior:
+
+- `Enable: false` skips action execution for that specific asset file only.
+- `Enable` does not disable sibling files, the containing folder, or child folders.
+- To disable a folder or subtree, set `enable: false` in the nearest `action.metadata` file instead.
+
 ## step.metadata behavior
 
-Each entry in step.metadata is loaded before argument substitution. This allows steps to reference additional metadata files that provide extra placeholder variables.
+Each entry in step.metadata is loaded before argument substitution. Additional sidecar metadata files are not loaded automatically and must be explicitly listed in the step `metadata` property. This allows steps to reference additional metadata files that provide extra placeholder variables.
 
 ### Metadata resolution modes
 
-#### 1. Extension-based metadata (starts with .)
+#### 1. Extension-based metadata
 
-If an entry starts with a dot (.), it is treated as an **additional extension** and appended to the asset file path:
+Metadata files do not enforce strict naming rules, but by default the `.metadata` extension convention is used and appended to the asset file path:
 
-- Example: `.sprite.metadata` with asset `C:/assets/sprite.png` → loads `C:/assets/sprite.sprite.metadata`
-- Example: `.vars.json` with asset `C:/assets/image.tsx` → loads `C:/assets/image.vars.json`
+- Example: `sprite.png.metadata` with asset `C:/assets/sprite.png` → loads `C:/assets/sprite.png.metadata`
 
 This is useful for asset-specific metadata files that follow the same naming convention as the asset itself.
 
 #### 2. File name-based metadata (no path separators)
 
-If an entry looks like a file name (no forward slashes), it is resolved **in the same folder** as the asset:
+No metadata files are auto-loaded in this mode. Only the base `file.ext.metadata` sidecar is loaded automatically. If an entry is explicitly listed in step `metadata` and looks like a file name (no forward slashes), it is resolved **in the same folder** as the asset:
 
-- Example: `pipeline.vars.json` with asset `C:/assets/image.png` → loads `C:/assets/pipeline.vars.json`
-- Example: `config.json` → loads from the asset's directory
-
-This is useful for shared metadata files that apply to all assets in a folder.
+This is useful for shared metadata files that apply to all assets in a folder when those files are explicitly referenced in step `metadata`.
 
 #### 3. Path-based metadata (contains path separators)
 
@@ -207,9 +222,8 @@ These values are then available as `${customVar}`, `${outputDir}`, `${quality}` 
   "command": "convert",
   "args": ["${file}", "-o", "${outputDir}/${filewithoutextension}.out.png"],
   "metadata": [
-    ".config.json",           // Load sprite.config.json (asset-specific)
-    "global-settings.json",   // Load from same folder as asset
-    "src/defaults.json"       // Load from src/defaults.json
+    "config.metadata",            // Load config.metadata
+    "src/defaults.metadata"       // Load from src/defaults.metadata
   ]
 }
 ```
@@ -224,6 +238,7 @@ Current enrichment logic:
 - .png: sets GeneratedBy and Path
 - .afb and .pt3: set GeneratedBy and Path
 - other extensions: base metadata only unless updated by other flows
+- new metadata files are created with `Enable: true`
 
 Metadata Modified is updated to current timestamp only after all action steps for a file succeed.
 
@@ -231,7 +246,7 @@ Metadata Modified is updated to current timestamp only after all action steps fo
 
 Requirements:
 
-- VS Code ^1.110.0
+- VS Code ^1.115.0
 - Node.js 20+
 
 Install dependencies:

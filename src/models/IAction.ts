@@ -13,6 +13,11 @@ export interface IExtensionSteps {
 export interface IActionFile {
     name: string;
     description?: string;
+  /**
+   * When false, no actions are executed for files in this folder or any
+   * subfolder that resolves to this action.metadata file.
+   */
+    enable: boolean;
     steps: IStep[];
     extensionOrder: string[]; // defines the order of extensions to process, e.g. ["png", "nxp", "default"]
     byExtension: {

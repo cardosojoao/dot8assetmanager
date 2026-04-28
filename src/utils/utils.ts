@@ -34,14 +34,12 @@ export const findFileUpward = (startPath: string, fileName: string): string | nu
  * Maps metadata fields to string placeholders used by action arguments.
  */
 export function mapMetadataToDictionary(store: Record<string, string>, metadata: IMetadata): Record<string, string> {
-    const dictionary: Record<string, string> = {};
-
     if (metadata.GeneratedBy !== undefined) {
         addIfNotExists(store, 'generatedBy', metadata.GeneratedBy);
     }
 
-    if (metadata.Enabled !== undefined) {
-        addIfNotExists(store, 'enabled', String(metadata.Enabled));
+    if (metadata.Enable !== undefined) {
+        addIfNotExists(store, 'enabled', String(metadata.Enable));
     }
 
     if (metadata.Name !== undefined) {
@@ -84,10 +82,15 @@ export function mapMetadataToDictionary(store: Record<string, string>, metadata:
         addIfNotExists(store, 'filewithoutextension', changeExtension(metadata.Path, ''));
     }
 
+    if (metadata.Height !== undefined) {
+        addIfNotExists(store, 'filenamewithoutextension', path.basename(store['filewithoutextension']));
+    }
+
+
     if (metadata.Path !== undefined) {
         addIfNotExists(store, 'directory', path.dirname(metadata.Path));
     }
-    return dictionary;
+    return store;
 }
 
 
@@ -143,6 +146,30 @@ export async function fileExists(file: string): Promise<boolean> {
 
 export function isLikelyFileName(input: string): boolean {
     return path.basename(input) === input;
+}
+
+export function isTrulyAbsolutePath(inputPath: string): boolean {
+    // On Windows, path.isAbsolute('/foo') is true (rooted on current drive).
+    // Treat single-leading-slash paths as relative in extension metadata config.
+    if (process.platform === 'win32' && /^[/\\](?![/\\])/.test(inputPath)) {
+        return false;
+    }
+
+    return path.isAbsolute(inputPath);
+}
+
+export function resolvePathFromFileDirectory(triggerFilePath: string, sourcePath: string): string {
+    const normalizedSource = sourcePath.trim();
+
+    if (isTrulyAbsolutePath(normalizedSource)) {
+        return path.normalize(normalizedSource);
+    }
+
+    const relativeSource = process.platform === 'win32'
+        ? normalizedSource.replace(/^[/\\]+/, '')
+        : normalizedSource;
+
+    return path.normalize(path.join(path.dirname(triggerFilePath), relativeSource));
 }
 
 // export function isLikelyFilePath(input: string): boolean {

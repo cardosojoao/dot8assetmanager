@@ -3,29 +3,9 @@ import * as fs from 'fs/promises';
 import * as vscode from 'vscode';
 import { IMetadata } from '../models/IMetadata';
 import { changeExtension, fileExists } from '../utils/utils';
-import { getMetadata, saveMetadata} from '../services/metadata';
+import { getMetadata, loadMetadata, saveMetadata } from '../services/metadata';
+import { getFile, getFiles } from '../services/files';
 
-async function getMetadataFiles(folderPath: string): Promise<string[]> {
-  const files: string[] = [];
-  try {
-    const items = await fs.readdir(folderPath);
-    for (const item of items) {
-      const fullPath = path.join(folderPath, item);
-      const stat = await fs.stat(fullPath);
-      if (stat.isDirectory()) {
-        files.push(...await getMetadataFiles(fullPath));
-      } else {
-        const assetPath = changeExtension(fullPath, '');
-        if (await fileExists(assetPath)) {
-          files.push(fullPath);
-        }
-      }
-    }
-  } catch (error) {
-    // Ignore errors during directory traversal
-  }
-  return files;
-}
 
 export function registerUpdateMetadataCommand(context: vscode.ExtensionContext) {
   const disposable = vscode.commands.registerCommand(
@@ -41,44 +21,35 @@ export function registerUpdateMetadataCommand(context: vscode.ExtensionContext) 
       try {
         const stat = await fs.stat(selectedPath);
         if (stat.isDirectory()) {
-          // Handle folder: update metadata for all files in folder and subfolders
-          const metadataFiles = await getMetadataFiles(selectedPath);
+          const filesMetadata = await getFiles([selectedPath], ["metadata"]);
           let updatedCount = 0;
-          for (const metadataPath of metadataFiles) {
-            const assetPath = changeExtension(metadataPath, '');
-            let metadata = await getMetadata(assetPath);
+          for (const metadataPath of filesMetadata) {
+            let metadata = await loadMetadata(metadataPath.path);
             if (!metadata) {
               continue; // Skip if metadata cannot be loaded
             }
             metadata.Modified = new Date(0).toISOString();
-            await saveMetadata(metadata, metadataPath);
+            await saveMetadata(metadata, metadataPath.path);
             updatedCount++;
           }
           vscode.window.showInformationMessage(`Updated metadata for ${updatedCount} files in folder ${path.basename(selectedPath)}`);
         } else {
-          // Handle single file
-          const metadataPath = selectedPath;
-          const assetPath = changeExtension(selectedPath, '');
-          if (!(await fileExists(assetPath))) {
-            vscode.window.showErrorMessage(`Asset file not found: ${assetPath}`);
-            return;
-          }
 
-          let metadata: IMetadata | undefined;
-          if (await fileExists(metadataPath)) {
-            metadata = await getMetadata(assetPath);
-          }
+          const fileMetadata = getFile(selectedPath);
+          // Handle single file
+
+          const metadata = await loadMetadata(fileMetadata.path);
 
           if (!metadata) {
             vscode.window.showErrorMessage('Failed to load metadata file.');
             return;
           }
           metadata.Modified = new Date(0).toISOString();
-          await saveMetadata(metadata, metadataPath);
-          vscode.window.showInformationMessage(`Updated metadata: ${path.basename(metadataPath)}`);
+          await saveMetadata(metadata, fileMetadata.path);
+          vscode.window.showInformationMessage(`Updated metadata: ${path.basename(selectedPath)}`);
         }
       } catch (error) {
-        vscode.window.showErrorMessage('Error accessing selected path.');
+        vscode.window.showErrorMessage(`Error accessing selected path. ${error}`);
       }
     }
   );

@@ -16,7 +16,7 @@ export function createMetadata(targetPath: string): void {
     if (!fs.existsSync(metadataPath)) {
         const modified = fs.statSync(targetPath).mtime;
         const metadata: IMetadata = {
-            Enabled: true,
+            Enable: true,
             Modified: modified.toISOString(),
             Path: targetPath,
         } as IMetadata;
@@ -64,14 +64,13 @@ export function saveMetadata(metadata: IMetadata, metadataPath: string): void {
  */
 function updateTileSet(metadata: IMetadata, filePath: string): IMetadata {
     const tileSet = readTileSet(filePath);
-    const pathData = path.join(path.dirname(metadata.Path), tileSet.image.source);
 
     metadata.GeneratedBy = GENERATED_BY;
     metadata.Width = Number(tileSet.tilewidth);
     metadata.Height = Number(tileSet.tileheight);
     metadata.Columns = Number(tileSet.columns);
     metadata.Rows = Number(tileSet.tilecount) / Number(tileSet.columns);
-    metadata.Path = pathData;
+    metadata.Path = filePath;
     return metadata;
 }
 
@@ -108,7 +107,11 @@ function updateGeneric(metadata: IMetadata, filePath: string): IMetadata {
  */
 export async function getMetadata(fileData: string): Promise<IMetadata> {
     const filePathMetadata = appendExtension(fileData, 'metadata');
-    const raw = await fs.promises.readFile(filePathMetadata, 'utf-8');
+    return loadMetadata(filePathMetadata);
+}
+
+export async function loadMetadata(filePath: string): Promise<IMetadata> {
+    const raw = await fs.promises.readFile(filePath, 'utf-8');
     const parsed = JSON.parse(raw) as IMetadata;
     return parsed;
 }

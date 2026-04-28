@@ -20,7 +20,7 @@ export async function processFiles(files: IFileItem[]): Promise<void> {
     for (const folder in grouped) {
         logger.debug(`[ACTION] Processing folder: ${folder}`);
         const action: Action | null = await getActionMetadata(folder);
-        if (action === null) {
+        if (action === null || !action.enable) {
             continue;
         }
         // get unique extensions in the folder, sort by action.extensionOrder, then process files in that order (files with extensions not in action.extensionOrder will be processed last)
@@ -45,7 +45,7 @@ export async function processFiles(files: IFileItem[]): Promise<void> {
         });
 
         for (const file of orderedFiles) {
-            logger.debug(`[ACTION] Processing file: ${file.path}`);
+            logger.info(`[ACTION] Processing file: ${file.path}`);
             try {
                 await executeAction(action, file);
             } catch (error) {

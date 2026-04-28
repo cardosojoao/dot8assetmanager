@@ -1,6 +1,10 @@
 export interface IMetadata {
     GeneratedBy: string;
-    Enabled: boolean;
+    /**
+     * Disables action execution for this asset only.
+     * Folder-wide disable behavior is controlled by action.metadata `enable`.
+     */
+    Enable: boolean;
     Name: string;
     Path: string;
     Modified: string;

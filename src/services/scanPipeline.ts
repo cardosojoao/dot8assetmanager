@@ -1,9 +1,11 @@
 import * as vscode from 'vscode';
 import { IFileItem } from '../models/IFileItem';
 import { createMetadata } from './metadata';
-import { fileChanges, getFiles, getMetadataFiles, IFileChangeEvent, watchFoldersAndCollectChanges } from './files';
+import { fileChanges, getFiles, getMetadataFiles, IFileChangeEvent, watchFoldersAndCollectChanges, waitForFileSystemStability } from './files';
 import { processFiles } from './processFiles';
 import { logger } from '../services/logger';
+import path from 'path';
+import { config } from '../config/config';
 
 
 interface IScanPipelineOptions {
@@ -17,7 +19,7 @@ export async function runScanPipeline(options: IScanPipelineOptions): Promise<vo
     const startTime = Date.now();
     logger.info(`[SCAN] Starting ${options.startLabel} at ${new Date().toISOString()}`);
     logger.debug(`[SCAN] Scanning folder(s): ${options.scanFolders.join("\r\n")}`);
-
+    // first set of files to process
     let files = await getFiles(options.scanFolders, options.scanExtensions);
     let pass = 1;
 
@@ -46,7 +48,7 @@ export async function runScanPipeline(options: IScanPipelineOptions): Promise<vo
         if (filesToProcess.length > 0) {
             const watchers = await watchFoldersAndCollectChanges(options.scanFolders, options.scanExtensions);
             await processFiles(filesToProcess);
-            await sleep(1000);
+            await waitForFileSystemStability(1000); // Wait for file system events to stabilize (1000ms of silence)
             await watchers.dispose();
         }
 
@@ -68,7 +70,7 @@ export async function runScanPipeline(options: IScanPipelineOptions): Promise<vo
         }
         const removeDup = Array.from(map.values());
         const dedupedUpdates = [...new Set(removeDup)];
-        files = dedupedUpdates.map((change: IFileChangeEvent) => ({
+        files = dedupedUpdates.filter(file => path.extname(file.path).slice(1) in config.scanExtensions  ).map((change: IFileChangeEvent) => ({
             path: change.path,
             modified: change.modified,
             filter: change.filter,
@@ -78,7 +80,3 @@ export async function runScanPipeline(options: IScanPipelineOptions): Promise<vo
     const duration = Date.now() - startTime;
     logger.info(`[SCAN] Completed in ${duration}ms at ${new Date().toISOString()}`);
 }
-function sleep(ms: number) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-

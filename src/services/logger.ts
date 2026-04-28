@@ -16,8 +16,8 @@ export enum LogLevel {
     Trace = 5
 }
 
-export function loadLoggerConfig(): LoggerConfig {
-    const cfg = vscode.workspace.getConfiguration("dot8assetmanager");
+export function loadLoggerConfig(cfg: vscode.WorkspaceConfiguration): LoggerConfig {
+    //const cfg = vscode.workspace.getConfiguration("dot8assetmanager");
 
     type LogLevelKey = "silent" | "error" | "warning" | "warn" | "info" | "debug" | "trace";
     const levelMap: Record<LogLevelKey, LogLevel> = {
@@ -29,10 +29,10 @@ export function loadLoggerConfig(): LoggerConfig {
         debug: LogLevel.Debug,
         trace: LogLevel.Trace
     };
-    const levelStr = (cfg.get<string>("logLevel", "info") || "info").toLowerCase();
+    const levelStr = (cfg.get<string>("LogLevel", "info") || "info").toLowerCase();
     const level = levelMap[levelStr as LogLevelKey] ?? LogLevel.Info;
     return {
-        level : level
+        level: level
     };
 }
 /////////////////////////////////////////////
@@ -45,6 +45,9 @@ export class Logger {
         private config: LoggerConfig
     ) { }
 
+    setLevel(level: LoggerConfig) {
+        this.filter = new LogFilter(level);
+    }
     private format(level: string, msg: string) {
         const ts = new Date().toISOString();
         return `[${ts}][${level}] ${msg}`;
@@ -70,8 +73,7 @@ export class Logger {
         this.log(LogLevel.Trace, msg);
     }
 
-    dispose() : void
-    {
+    dispose(): void {
         this.router.dispose();
     }
 
@@ -84,10 +86,10 @@ export class Logger {
 }
 
 export class LogFilter {
-    constructor(private config: LoggerConfig) { }
+    constructor(private levelCfg: LoggerConfig) { }
 
     shouldLog(level: LogLevel): boolean {
-        if (level > this.config.level){ return false;}
+        if (level > this.levelCfg.level) { return false; }
         return true;
     }
 }
@@ -105,8 +107,7 @@ export class OutputRouter {
         this.channel.appendLine(message);
     }
 
-    public dispose() : void
-    {
+    public dispose(): void {
         this.channel.dispose();
     }
 

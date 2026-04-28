@@ -11,8 +11,57 @@ export interface IFileChangeEvent extends IFileItem {
 }
 
 export const fileChanges: IFileChangeEvent[] = [];
+let debounceTimer: NodeJS.Timeout | null = null;
+let pendingResolve: (() => void) | null = null;
+let pendingPromise: Promise<void> | null = null;
 
+/**
+ * Marks the file changes as unstable when new events arrive, and resolves
+ * the returned promise only when no new events arrive for the specified debounce duration.
+ */
+export function waitForFileSystemStability(debounceMs: number = 500): Promise<void> {
+    if (!pendingPromise) {
+        pendingPromise = new Promise((resolve) => {
+            pendingResolve = resolve;
+        });
 
+        // Start a timer even if no changes ever come.
+        debounceTimer = setTimeout(finish, debounceMs);
+    }
+
+    return pendingPromise;
+}
+
+function finish() {
+    debounceTimer = null;
+
+    if (pendingResolve) {
+        pendingResolve();
+    }
+
+    pendingResolve = null;
+    pendingPromise = null;
+}
+
+/**
+ * Notifies the stability monitor that a new file change has arrived.
+ */
+export function notifyFileChange(debounceMs: number = 500) {
+    if (debounceTimer) {
+        clearTimeout(debounceTimer);
+    }
+
+    debounceTimer = setTimeout(() => {
+        debounceTimer = null;
+
+        if (pendingResolve) {
+            pendingResolve();
+        }
+
+        pendingResolve = null;
+        pendingPromise = null;
+    }, debounceMs);
+}
 
 /**
  * Scans configured folders and returns matching files with normalized metadata
@@ -21,8 +70,8 @@ export const fileChanges: IFileChangeEvent[] = [];
 export async function getFiles(scanFolders: string[], extensions: string[] = []): Promise<IFileItem[]> {
     let allFiles: IFileItem[] = [];
     try {
-        const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-        if (!workspaceRoot) {
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        if (!workspaceFolders || workspaceFolders.length === 0) {
             logger.error('[FILES] ❌ Error: No workspace folder open!');
             vscode.window.showErrorMessage('No workspace folder open!');
             return [];
@@ -38,26 +87,14 @@ export async function getFiles(scanFolders: string[], extensions: string[] = [])
 
             let relative = path.relative(rootFolder.uri.fsPath, folder);
             relative = relative.replace(/\\/g, '/');
-            const patternPath = relative ? `${relative}/**/*` : '**/*';
+            const patternPath = relative ? `${relative}/**/*.{${extensions.join(",")}}` : `**/*.{${extensions.join(",")}`;
             const pattern = new vscode.RelativePattern(rootFolder, patternPath);
 
             const files = await vscode.workspace.findFiles(
-                pattern, '**/*.{metadata,cmd,ini}'
+                pattern, '**/*.{cmd,ini}'
             );
             allFiles = allFiles.concat(files.map(file => {
-                try {
-                    const stat = fs.statSync(file.fsPath);
-                    const pathFile = file.fsPath;
-
-                    return {
-                        path: pathFile,
-                        modified: stat.mtime,
-                        filter: pathFile
-                    };
-                } catch (error) {
-                    logger.warn(`[FILES] ⚠️ Warning: Failed to stat ${file.fsPath}: ${error instanceof Error ? error.message : String(error)}`);
-                    throw error;
-                }
+                return getFile(file.fsPath);
             }));
         }
     } catch (error) {
@@ -66,6 +103,20 @@ export async function getFiles(scanFolders: string[], extensions: string[] = [])
     }
 
     return allFiles;
+}
+
+export function getFile(filePath: string): IFileItem {
+    try {
+        const stat = fs.statSync(filePath);
+        return {
+            path: filePath,
+            modified: stat.mtime,
+            filter: filePath
+        };
+    } catch (error) {
+        logger.warn(`[FILES] ⚠️ Warning: Failed to stat ${filePath}: ${error instanceof Error ? error.message : String(error)}`);
+        throw error;
+    }
 }
 
 /**
@@ -99,14 +150,14 @@ export async function getMetadataFiles(files: IFileItem[]): Promise<IFileItem[]>
 
 /**
  * Watches multiple folders and appends file-system change events to the
- * provided collection.
+ * module-level `fileChanges` queue.
  */
 export async function watchFoldersAndCollectChanges(
     scanFolders: string[],
     extensions: string[]
 ): Promise<vscode.Disposable> {
-    const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-    if (!workspaceRoot) {
+    const workspaceFolders = vscode.workspace.workspaceFolders;
+    if (!workspaceFolders || workspaceFolders.length === 0) {
         logger.error('[WATCH] ❌ Error: No workspace folder open!');
         throw new Error('No workspace folder open!');
     }
@@ -126,12 +177,10 @@ export async function watchFoldersAndCollectChanges(
             return;
         }
         let modified = new Date();
-        if (changeType !== 'deleted') {
-            try {
-                modified = fs.statSync(uri.fsPath).mtime;
-            } catch {
-                // If the file is in flux, keep current time as fallback.
-            }
+        try {
+            modified = fs.statSync(uri.fsPath).mtime;
+        } catch {
+            // If the file is in flux, keep current time as fallback.
         }
 
         const filePath = uri.fsPath;
@@ -142,6 +191,7 @@ export async function watchFoldersAndCollectChanges(
             changeType
         });
         logger.debug(`[WATCH] ${changeType.toUpperCase()}: ${filePath}`);
+        notifyFileChange(); // Notify stability monitor of new event
     };
 
     for (const folder of scanFolders) {
@@ -166,7 +216,6 @@ export async function watchFoldersAndCollectChanges(
 
         watcher.onDidCreate((uri) => addChange(uri, 'created'));
         watcher.onDidChange((uri) => addChange(uri, 'changed'));
-        watcher.onDidDelete((uri) => addChange(uri, 'deleted'));
 
         watchers.push(watcher);
         logger.debug(`[WATCH] Monitoring folder: ${folder}`);

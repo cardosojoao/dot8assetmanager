@@ -35,7 +35,7 @@
           "description": "File extensions to be scanned for assets.",
           "scope": "window"
         },
-        "dot8assetmanager.logLevel": {
+        "dot8assetmanager.LogLevel": {
           "type": "string",
           "default": "info",
           "enum": [
@@ -56,8 +56,13 @@
           ],
           "description": "Log level for extension output.",
           "scope": "window"
+        },
+        "dot8assetmanager.AutoScan": {
+          "type": "boolean",
+          "default": true,
+          "description": "runs changes scan when VScode gains focus.",
+          "scope": "window"
         }
-
       }
     },
     "commands": [
@@ -93,7 +98,8 @@
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",
-    "test": "vscode-test"
+    "test": "vscode-test",
+    "coverage": "vscode-test --config .vscode-test.mjs --coverage --coverage-reporter text"
   },
   "devDependencies": {
     "@types/assert": "^1.5.11",

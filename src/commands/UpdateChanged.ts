@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { IFileItem } from '../models/IFileItem';
-import { config } from '../config/config';
+import { config, reloadConfig } from '../config/config';
 import { runScanPipeline } from '../services/scanPipeline';
 
 /**
@@ -12,6 +12,7 @@ import { runScanPipeline } from '../services/scanPipeline';
 export function registerUpdateChangedCommand(context: vscode.ExtensionContext) {
     const disposable = vscode.commands.registerCommand('dot8assetmanager.updateChangedAssets',
         async () => {
+            reloadConfig();
             await runScanPipeline({
                 scanFolders: config.scanFolders,
                 scanExtensions: config.scanExtensions,

@@ -5,6 +5,7 @@ import { IStep, IExtensionSteps, IActionFile } from './IAction';
 export class Action implements IActionFile {
     name: string;
     description?: string;
+    enable : boolean;
     steps: IStep[];
     extensionOrder: string[];
     byExtension: {
@@ -18,6 +19,7 @@ export class Action implements IActionFile {
         this.steps = data.steps;
         this.byExtension = data.byExtension;
         this.extensionOrder = data.extensionOrder;
+        this.enable = data.enable;
     }
 
     getStepsForFile(filePath: string): IStep[] {

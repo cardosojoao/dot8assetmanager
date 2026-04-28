@@ -1,6 +1,6 @@
 import { IFileItem } from '../models/IFileItem';
 import { IMetadata } from '../models/IMetadata';
-import { appendExtension, executeFile, fileExists, isLikelyFileName, changeExtension, findFileUpward, mapMetadataToDictionary, applyMetadataToArgument } from '../utils/utils';
+import { appendExtension, executeFile, fileExists, changeExtension, findFileUpward, mapMetadataToDictionary, applyMetadataToArgument, resolvePathFromFileDirectory } from '../utils/utils';
 import { saveMetadata, getMetadata, updateMetadataType, getMetadataGeneric } from './metadata';
 import { Action } from '../models/action';
 import path from 'path';
@@ -38,9 +38,9 @@ export async function executeAction(action: Action, file: IFileItem): Promise<vo
 
         let metaData = await getMetadata(file.path);
         metaData = updateMetadataType(metaData, file.path) as IMetadata;
-        
+
         // Skip processing if file is disabled
-        if (metaData.Enabled === false) {
+        if (metaData.Enable === false) {
             logger.debug(`[ACTION] ⏭️  Skipping disabled file: ${file.path}`);
             return;
         }
@@ -49,10 +49,9 @@ export async function executeAction(action: Action, file: IFileItem): Promise<vo
         mapMetadataToDictionary(metaDataDict, metaData as IMetadata);
         metaDataDict['trigger'] = file.path;
         metaDataDict['triggerwithoutextension'] = changeExtension(file.path, '');
-        metaDataDict['triggerdirectory'] =  path.dirname(file.path);
+        metaDataDict['triggernamewithoutextension'] = path.basename(metaDataDict['triggerwithoutextension']);
+        metaDataDict['triggerdirectory'] = path.dirname(file.path);
         let allStepsResult: boolean = true;
-
-
 
         for (const step of steps) {
             logger.debug(`[STEP] Executing: ${step.name}`);
@@ -63,17 +62,23 @@ export async function executeAction(action: Action, file: IFileItem): Promise<vo
                     // standard metadata file
                     if (metadataSource[0] === '.') {
                         const metadataStepPath = changeExtension(file.path, metadataSource);
-                        let metaDataStep = await getMetadata(metadataStepPath);
-                        metaData = updateMetadataType(metaData, metadataStepPath) as IMetadata;
-                        mapMetadataToDictionary(metadataDictStep, metaData as IMetadata);
+                        try {
+                            if (await fileExists(metadataStepPath)) {
+                                let metaDataStep = await getMetadata(metadataStepPath);
+                                metaData = updateMetadataType(metaData, metadataStepPath) as IMetadata;
+                                mapMetadataToDictionary(metadataDictStep, metaData as IMetadata);
+                            }
+                            else {
+                                logger.warn(`[STEP] ⚠️ Extend metadata not available: ${metadataStepPath}`);
+                            }
+                        }
+                        catch (error) {
+                            logger.warn(`[STEP] ❌  can't load extended metadata file: ${metadataStepPath}`);
+                        }
                     }
                     // generic metadata file consumed as key value pair
                     else {
-                        let pathSource = metadataSource;
-                        if (isLikelyFileName(metadataSource)) {
-                            pathSource = path.join(path.dirname(file.path), metadataSource);
-                        }
-
+                        const pathSource = resolvePathFromFileDirectory(file.path, metadataSource);
                         if (await fileExists(pathSource)) {
                             const ext = await getMetadataGeneric(pathSource);
                             // merge content with  current dictionary
@@ -82,6 +87,9 @@ export async function executeAction(action: Action, file: IFileItem): Promise<vo
                                     metadataDictStep[key] = String(ext[key]);
                                 }
                             }
+                        }
+                        else {
+                            logger.warn(`[STEP] ⚠️ Extend metadata not available: ${pathSource}`);
                         }
                     }
                 }
@@ -92,7 +100,6 @@ export async function executeAction(action: Action, file: IFileItem): Promise<vo
                 const workingDir = step.workingDirectory
                     ? applyMetadataToArgument(step.workingDirectory, metaDataDict)
                     : path.dirname(file.path);
-                const fullCommand = `${step.command} ${args.join(' ')}`;
                 const stepSuccess = executeFile(step.command, args.join(' '), workingDir);
                 if (!stepSuccess) {
                     logger.error(`[STEP] ❌ Step failed: ${step.name}`);
@@ -120,5 +127,3 @@ export async function executeAction(action: Action, file: IFileItem): Promise<vo
         logger.error(`[ACTION] ❌ Fatal error executing action for ${file.path}: ${error instanceof Error ? error.message : String(error)}`);
     }
 }
-
-
