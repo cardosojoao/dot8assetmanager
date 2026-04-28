@@ -1,8 +1,9 @@
 {
   "name": "dot8assetmanager",
+  "publisher": "bapa",
   "displayName": "dot8 asset manager",
   "description": "Dot 8 Engine asset manager",
-  "version": "0.0.5",
+  "version": "0.1.0",
   "icon": "images/logo_black.png",
   "repository": {
     "type": "git",
