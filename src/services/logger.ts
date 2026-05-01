@@ -49,7 +49,13 @@ export class Logger {
         this.filter = new LogFilter(level);
     }
     private format(level: string, msg: string) {
-        const ts = new Date().toISOString();
+        const ts = new Date().toLocaleTimeString('en-GB', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        });
+
         return `[${ts}][${level}] ${msg}`;
     }
 
