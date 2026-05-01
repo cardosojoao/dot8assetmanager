@@ -18,7 +18,8 @@ export function registerUpdateChangedCommand(context: vscode.ExtensionContext) {
                 scanExtensions: config.scanExtensions,
                 startLabel: 'scan',
                 selectFilesToProcess: (files: IFileItem[], metadataFiles: IFileItem[]) => {
-                    return files.map((sourceFile: IFileItem) => ({
+                    return files.
+                    map((sourceFile: IFileItem) => ({
                         sourceFile,
                         metadataFile: metadataFiles.find((metadataFile: IFileItem) => metadataFile.filter === sourceFile.filter),
                     }))

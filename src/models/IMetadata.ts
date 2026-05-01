@@ -10,6 +10,8 @@ export interface IMetadata {
     Modified: string;
     Width: number;
     Height: number;
+    CellWidth: number;
+    CellHeight: number;
     Columns: number;
     Rows: number;
 }

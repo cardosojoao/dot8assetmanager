@@ -1,6 +1,6 @@
 import { IFileItem } from '../models/IFileItem';
 import { IMetadata } from '../models/IMetadata';
-import { appendExtension, executeFile, fileExists, changeExtension, findFileUpward, mapMetadataToDictionary, applyMetadataToArgument, resolvePathFromFileDirectory } from '../utils/utils';
+import { appendExtension, executeFile, fileExists, changeExtension, findFileUpward, mapMetadataToDictionary, applyMetadataToArgument, resolvePathFromFileDirectory, mapMetadataToDictionaryTrigger } from '../utils/utils';
 import { saveMetadata, getMetadata, updateMetadataType, getMetadataGeneric } from './metadata';
 import { Action } from '../models/action';
 import path from 'path';
@@ -46,6 +46,7 @@ export async function executeAction(action: Action, file: IFileItem): Promise<vo
         }
 
         const metaDataDict: Record<string, string> = {};
+        mapMetadataToDictionaryTrigger(metaDataDict, metaData as IMetadata);
         mapMetadataToDictionary(metaDataDict, metaData as IMetadata);
         metaDataDict['trigger'] = file.path;
         metaDataDict['triggerwithoutextension'] = changeExtension(file.path, '');

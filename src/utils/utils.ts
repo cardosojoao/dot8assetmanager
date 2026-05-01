@@ -30,6 +30,26 @@ export const findFileUpward = (startPath: string, fileName: string): string | nu
     }
 };
 
+
+export function mapMetadataToDictionaryTrigger(store: Record<string, string>, metadata: IMetadata): Record<string, string> {
+    if (metadata.Path !== undefined) {
+        addIfNotExists(store, 'file', metadata.Path);
+    }
+
+    if (metadata.Path !== undefined) {
+        addIfNotExists(store, 'filewithoutextension', changeExtension(metadata.Path, ''));
+    }
+
+    if (metadata.Path !== undefined) {
+        addIfNotExists(store, 'filenamewithoutextension', path.basename(store['filewithoutextension']));
+    }
+    if (metadata.Path !== undefined) {
+        addIfNotExists(store, 'directory', path.dirname(metadata.Path));
+    }
+    return store;
+}
+ 
+
 /**
  * Maps metadata fields to string placeholders used by action arguments.
  */
@@ -46,20 +66,18 @@ export function mapMetadataToDictionary(store: Record<string, string>, metadata:
         addIfNotExists(store, 'name', metadata.Name);
     }
 
-    if (metadata.Path !== undefined) {
-        addIfNotExists(store, 'file', metadata.Path);
-    }
+
 
     if (metadata.Modified !== undefined) {
         addIfNotExists(store, 'modified', metadata.Modified);
     }
 
-    if (metadata.Width !== undefined) {
-        addIfNotExists(store, 'cellwidth', String(metadata.Width));
+    if (metadata.CellWidth !== undefined) {
+        addIfNotExists(store, 'cellwidth', String(metadata.CellWidth));
     }
 
-    if (metadata.Height !== undefined) {
-        addIfNotExists(store, 'cellheight', String(metadata.Height));
+    if (metadata.CellHeight !== undefined) {
+        addIfNotExists(store, 'cellheight', String(metadata.CellHeight));
     }
 
     if (metadata.Columns !== undefined) {
@@ -71,25 +89,14 @@ export function mapMetadataToDictionary(store: Record<string, string>, metadata:
     }
 
     if (metadata.Width !== undefined) {
-        addIfNotExists(store, 'width', String(metadata.Width * metadata.Columns));
+        addIfNotExists(store, 'width', String(metadata.Width));
     }
 
     if (metadata.Height !== undefined) {
-        addIfNotExists(store, 'height', String(metadata.Height * metadata.Rows));
-    }
-
-    if (metadata.Height !== undefined) {
-        addIfNotExists(store, 'filewithoutextension', changeExtension(metadata.Path, ''));
-    }
-
-    if (metadata.Height !== undefined) {
-        addIfNotExists(store, 'filenamewithoutextension', path.basename(store['filewithoutextension']));
+        addIfNotExists(store, 'height', String(metadata.Height));
     }
 
 
-    if (metadata.Path !== undefined) {
-        addIfNotExists(store, 'directory', path.dirname(metadata.Path));
-    }
     return store;
 }
 

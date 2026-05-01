@@ -66,10 +66,12 @@ function updateTileSet(metadata: IMetadata, filePath: string): IMetadata {
     const tileSet = readTileSet(filePath);
 
     metadata.GeneratedBy = GENERATED_BY;
-    metadata.Width = Number(tileSet.tilewidth);
-    metadata.Height = Number(tileSet.tileheight);
+    metadata.CellWidth = Number(tileSet.tilewidth);
+    metadata.CellHeight = Number(tileSet.tileheight);
     metadata.Columns = Number(tileSet.columns);
     metadata.Rows = Number(tileSet.tilecount) / Number(tileSet.columns);
+    metadata.Width = metadata.CellWidth * metadata.Columns;
+    metadata.Height = metadata.CellHeight * metadata.Rows;
     metadata.Path = filePath;
     return metadata;
 }
