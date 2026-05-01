@@ -28,7 +28,8 @@ export function registerUpdateMetadataCommand(context: vscode.ExtensionContext) 
             if (!metadata) {
               continue; // Skip if metadata cannot be loaded
             }
-            metadata.Modified = new Date(0).toISOString();
+            metadata.Modified = new Date(0);
+            metadata.ModifiedLocal = new Date(0).toLocaleString();
             await saveMetadata(metadata, metadataPath.path);
             updatedCount++;
           }
@@ -44,7 +45,8 @@ export function registerUpdateMetadataCommand(context: vscode.ExtensionContext) 
             vscode.window.showErrorMessage('Failed to load metadata file.');
             return;
           }
-          metadata.Modified = new Date(0).toISOString();
+          metadata.Modified = new Date(0);
+          metadata.ModifiedLocal = new Date(0).toLocaleString();          
           await saveMetadata(metadata, fileMetadata.path);
           vscode.window.showInformationMessage(`Updated metadata: ${path.basename(selectedPath)}`);
         }

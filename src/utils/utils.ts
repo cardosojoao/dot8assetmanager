@@ -68,9 +68,9 @@ export function mapMetadataToDictionary(store: Record<string, string>, metadata:
 
 
 
-    if (metadata.Modified !== undefined) {
-        addIfNotExists(store, 'modified', metadata.Modified);
-    }
+    // if (metadata.Modified !== undefined) {
+    //     addIfNotExists(store, 'modified', metadata.Modified.toISOString());
+    // }
 
     if (metadata.CellWidth !== undefined) {
         addIfNotExists(store, 'cellwidth', String(metadata.CellWidth));

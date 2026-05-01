@@ -17,7 +17,8 @@ export function createMetadata(targetPath: string): void {
         const modified = fs.statSync(targetPath).mtime;
         const metadata: IMetadata = {
             Enable: true,
-            Modified: modified.toISOString(),
+            Modified: modified,
+            ModifiedLocal: modified.toLocaleString(),
             Path: targetPath,
         } as IMetadata;
         const update = updateMetadataType(metadata, targetPath);
@@ -72,7 +73,7 @@ function updateTileSet(metadata: IMetadata, filePath: string): IMetadata {
     metadata.Rows = Number(tileSet.tilecount) / Number(tileSet.columns);
     metadata.Width = metadata.CellWidth * metadata.Columns;
     metadata.Height = metadata.CellHeight * metadata.Rows;
-    metadata.Path = filePath;
+    //metadata.Path = filePath;
     return metadata;
 }
 
@@ -82,7 +83,7 @@ function updateTileSet(metadata: IMetadata, filePath: string): IMetadata {
 function updatePattern(metadata: IMetadata, filePath: string): IMetadata {
     const dimension: [width : number,height: number]= getPatternDimensions(filePath);
     metadata.GeneratedBy = GENERATED_BY;
-    metadata.Path = filePath;
+    //metadata.Path = filePath;
     if (metadata.Width === undefined)
     {
         metadata.Width = dimension[0];
@@ -100,7 +101,7 @@ function updatePattern(metadata: IMetadata, filePath: string): IMetadata {
  */
 function updateGeneric(metadata: IMetadata, filePath: string): IMetadata {
     metadata.GeneratedBy = GENERATED_BY;
-    metadata.Path = filePath;
+    //metadata.Path = filePath;
     return metadata;
 }
 

@@ -24,7 +24,7 @@ export function registerUpdateChangedCommand(context: vscode.ExtensionContext) {
                         metadataFile: metadataFiles.find((metadataFile: IFileItem) => metadataFile.filter === sourceFile.filter),
                     }))
                         .filter((pair: { sourceFile: IFileItem; metadataFile: IFileItem | undefined }) =>
-                            pair.metadataFile !== undefined && pair.sourceFile.modified.toISOString() > pair.metadataFile.modified.toISOString())
+                            pair.metadataFile !== undefined && pair.sourceFile.modified > pair.metadataFile.modified)
                         .map((pair: { sourceFile: IFileItem; metadataFile: IFileItem | undefined }) => pair.metadataFile as IFileItem);
                 },
             });

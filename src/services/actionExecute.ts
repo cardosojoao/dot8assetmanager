@@ -1,3 +1,4 @@
+import * as vscode from 'vscode';
 import { IFileItem } from '../models/IFileItem';
 import { IMetadata } from '../models/IMetadata';
 import { appendExtension, executeFile, fileExists, changeExtension, findFileUpward, mapMetadataToDictionary, applyMetadataToArgument, resolvePathFromFileDirectory, mapMetadataToDictionaryTrigger } from '../utils/utils';
@@ -47,6 +48,12 @@ export async function executeAction(action: Action, file: IFileItem): Promise<vo
 
         const metaDataDict: Record<string, string> = {};
         mapMetadataToDictionaryTrigger(metaDataDict, metaData as IMetadata);
+
+        const workspaceRoots = (vscode.workspace.workspaceFolders ?? []).map(wf => wf.uri.fsPath);
+        let rootIndex = 0;
+        for (const root of workspaceRoots) {
+            metaDataDict[`root${rootIndex}`] = root;
+        }
         mapMetadataToDictionary(metaDataDict, metaData as IMetadata);
         metaDataDict['trigger'] = file.path;
         metaDataDict['triggerwithoutextension'] = changeExtension(file.path, '');
@@ -107,6 +114,14 @@ export async function executeAction(action: Action, file: IFileItem): Promise<vo
                     allStepsResult = false;
                     break;
                 }
+
+                const now = new Date();
+                const metadataPath = appendExtension(file.path, 'metadata');
+                metaData.Modified = now;
+                metaData.ModifiedLocal = metaData.Modified.toLocaleString();
+                file.modified = now;
+                saveMetadata(metaData, metadataPath);
+
                 logger.debug(`[STEP] ✅  Step succeeded: ${step.name}`);
             } catch (error) {
                 logger.error(`[STEP] ❌ Step error: ${error instanceof Error ? error.message : String(error)}`);
@@ -116,11 +131,12 @@ export async function executeAction(action: Action, file: IFileItem): Promise<vo
         }
 
         if (allStepsResult) {
-            const now = new Date();
-            const metadataPath = appendExtension(file.path, 'metadata');
-            metaData.Modified = now.toISOString();
-            saveMetadata(metaData, metadataPath);
-            logger.debug(`[ACTION] ✅  All steps completed, metadata updated at ${now.toISOString()}`);
+            // const now = new Date();
+            // const metadataPath = appendExtension(file.path, 'metadata');
+            // metaData.Modified = now;
+            // metaData.ModifiedLocal = metaData.Modified.toLocaleString();
+            // saveMetadata(metaData, metadataPath);
+            logger.debug(`[ACTION] ✅  All steps completed, metadata updated`);
         } else {
             logger.error(`[ACTION] ❌ Action failed, metadata not updated`);
         }

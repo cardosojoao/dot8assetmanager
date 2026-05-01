@@ -7,7 +7,8 @@ export interface IMetadata {
     Enable: boolean;
     Name: string;
     Path: string;
-    Modified: string;
+    Modified: Date;             // date with time zone, used for compare operations
+    ModifiedLocal: string;      // date just for user visualization, not used in any operations
     Width: number;
     Height: number;
     CellWidth: number;

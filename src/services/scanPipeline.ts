@@ -53,7 +53,7 @@ export async function runScanPipeline(options: IScanPipelineOptions): Promise<vo
         }
 
         const updateFiles = fileChanges.filter((change: IFileChangeEvent) =>
-            !filesToProcess.some((processed: IFileItem) => processed.path === change.path)
+            !filesToProcess.some((processed: IFileItem) => processed.path === change.path && processed.modified > change.modified)
         );
 
         fileChanges.splice(0, fileChanges.length);
@@ -70,11 +70,14 @@ export async function runScanPipeline(options: IScanPipelineOptions): Promise<vo
         }
         const removeDup = Array.from(map.values());
         const dedupedUpdates = [...new Set(removeDup)];
-        files = dedupedUpdates.filter(file => path.extname(file.path).slice(1) in config.scanExtensions  ).map((change: IFileChangeEvent) => ({
-            path: change.path,
-            modified: change.modified,
-            filter: change.filter,
-        }));
+
+        files = dedupedUpdates.filter(file => config.scanExtensions.includes(path.extname(file.path).slice(1)))
+            .map((change: IFileChangeEvent) : IFileItem => ({
+                path: change.path,
+                modified: change.modified,
+                filter: change.filter
+            })
+            );
     }
 
     const duration = Date.now() - startTime;
