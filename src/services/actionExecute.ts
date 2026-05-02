@@ -47,18 +47,20 @@ export async function executeAction(action: Action, file: IFileItem): Promise<vo
         }
 
         const metaDataDict: Record<string, string> = {};
-        mapMetadataToDictionaryTrigger(metaDataDict, metaData as IMetadata);
+        mapMetadataToDictionaryTrigger(metaDataDict, file.path);
 
+        // workspace roots as root, root0, root1... to support multi-root workspaces and related metadata in steps
         const workspaceRoots = (vscode.workspace.workspaceFolders ?? []).map(wf => wf.uri.fsPath);
         let rootIndex = 0;
         for (const root of workspaceRoots) {
             metaDataDict[`root${rootIndex}`] = root;
+            rootIndex++;
         }
+        if( workspaceRoots.length > 0) {
+            metaDataDict['root'] = workspaceRoots[0];
+        }
+
         mapMetadataToDictionary(metaDataDict, metaData as IMetadata);
-        metaDataDict['trigger'] = file.path;
-        metaDataDict['triggerwithoutextension'] = changeExtension(file.path, '');
-        metaDataDict['triggernamewithoutextension'] = path.basename(metaDataDict['triggerwithoutextension']);
-        metaDataDict['triggerdirectory'] = path.dirname(file.path);
         let allStepsResult: boolean = true;
 
         for (const step of steps) {
@@ -119,8 +121,8 @@ export async function executeAction(action: Action, file: IFileItem): Promise<vo
                 const metadataPath = appendExtension(file.path, 'metadata');
                 metaData.Modified = now;
                 metaData.ModifiedLocal = metaData.Modified.toLocaleString();
-                file.modified = now;
                 saveMetadata(metaData, metadataPath);
+                file.modified = now;
 
                 logger.debug(`[STEP] ✅  Step succeeded: ${step.name}`);
             } catch (error) {

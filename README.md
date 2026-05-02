@@ -138,10 +138,6 @@ These placeholders are replaced in args and workingDirectory:
 - ${generatedBy}
 - ${enabled}
 - ${name}
-- ${file}
-- ${filewnameithoutextension}
-- ${filewithoutextension}
-- ${directory}
 - ${modified}
 - ${cellwidth}
 - ${cellheight}
@@ -150,13 +146,15 @@ These placeholders are replaced in args and workingDirectory:
 - ${width}
 - ${height}
 
-### Trigger variables
-- ${trigger} - The full path of the physical file that triggered the event
-- ${triggernamewithoutextension} - The file  that triggered the event name without extension
-- ${triggerwithoutextension} - The trigger file path without its extension
-- ${triggerdirectory} - The directory containing the trigger file
+### File information variables
+- ${file} - Full path of the file being processed
+- ${filewithoutextension} - File path without extension
+- ${filenamewithoutextension} - File name without extension
+- ${directory} - Directory that contains the file being processed
 
-**Important**: The trigger is always the physical file that was changed and initiated the processing event. The file being processed (${file}) could be the trigger file itself, or it could be a different file whose metadata is derived from or referenced by the trigger file's metadata. For example, when a .tsx tileset file is modified, (${file}) metadata it might reference the .png sprite assets that the tileset references in its metadata.
+### Workspace root variables
+- ${root} - First workspace root path
+- ${root0}, ${root1}, ... - Workspace root paths by index (for multi-root workspaces)
 
 Notes:
 

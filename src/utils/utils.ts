@@ -31,24 +31,14 @@ export const findFileUpward = (startPath: string, fileName: string): string | nu
 };
 
 
-export function mapMetadataToDictionaryTrigger(store: Record<string, string>, metadata: IMetadata): Record<string, string> {
-    if (metadata.Path !== undefined) {
-        addIfNotExists(store, 'file', metadata.Path);
-    }
-
-    if (metadata.Path !== undefined) {
-        addIfNotExists(store, 'filewithoutextension', changeExtension(metadata.Path, ''));
-    }
-
-    if (metadata.Path !== undefined) {
-        addIfNotExists(store, 'filenamewithoutextension', path.basename(store['filewithoutextension']));
-    }
-    if (metadata.Path !== undefined) {
-        addIfNotExists(store, 'directory', path.dirname(metadata.Path));
-    }
+export function mapMetadataToDictionaryTrigger(store: Record<string, string>, filePath: string): Record<string, string> {
+    addIfNotExists(store, 'file', filePath);
+    addIfNotExists(store, 'filewithoutextension', changeExtension(filePath, ''));
+    addIfNotExists(store, 'filenamewithoutextension', path.basename(store['filewithoutextension']));
+    addIfNotExists(store, 'directory', path.dirname(filePath));
     return store;
 }
- 
+
 
 /**
  * Maps metadata fields to string placeholders used by action arguments.
