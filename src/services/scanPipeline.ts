@@ -17,7 +17,7 @@ interface IScanPipelineOptions {
 
 export async function runScanPipeline(options: IScanPipelineOptions): Promise<void> {
     const startTime = Date.now();
-    logger.info(`[SCAN] Starting ${options.startLabel} at ${new Date().toISOString()}`);
+    logger.info(`[SCAN] Starting ${options.startLabel} at ${new Date()}`);
     logger.debug(`[SCAN] Scanning folder(s): ${options.scanFolders.join("\r\n")}`);
     // first set of files to process
     let files = await getFiles(options.scanFolders, options.scanExtensions);
@@ -81,5 +81,5 @@ export async function runScanPipeline(options: IScanPipelineOptions): Promise<vo
     }
 
     const duration = Date.now() - startTime;
-    logger.info(`[SCAN] Completed in ${duration}ms at ${new Date().toISOString()}`);
+    logger.info(`[SCAN] Completed in ${duration}ms at ${new Date()}`);
 }

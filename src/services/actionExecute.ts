@@ -35,6 +35,19 @@ export async function executeAction(action: Action, file: IFileItem): Promise<vo
 
     try {
         const steps = action.getStepsForFile(file.path);
+        if (steps.length === 0) {
+            logger.debug(`[ACTION] ⏭️  no steps found for: ${file.path}`);
+            // no steps, mark file a processed
+            const now = new Date();
+            const metadataPath = appendExtension(file.path, 'metadata');
+            let metaData = await getMetadata(file.path);
+            metaData.Modified = now;
+            metaData.ModifiedLocal = metaData.Modified.toLocaleString();
+            saveMetadata(metaData, metadataPath);
+            file.modified = now;
+            return;
+        }
+
         logger.debug(`[ACTION] Found ${steps.length} steps to execute`);
 
         let metaData = await getMetadata(file.path);
@@ -56,7 +69,7 @@ export async function executeAction(action: Action, file: IFileItem): Promise<vo
             metaDataDict[`root${rootIndex}`] = root;
             rootIndex++;
         }
-        if( workspaceRoots.length > 0) {
+        if (workspaceRoots.length > 0) {
             metaDataDict['root'] = workspaceRoots[0];
         }
 
@@ -64,71 +77,77 @@ export async function executeAction(action: Action, file: IFileItem): Promise<vo
         let allStepsResult: boolean = true;
 
         for (const step of steps) {
-            logger.debug(`[STEP] Executing: ${step.name}`);
-            const metadataDictStep: Record<string, string> = {};
+            if (step.enable === undefined || step.enable) {
 
-            if (step.metadata !== undefined && step.metadata.length > 0) {
-                for (const metadataSource of step.metadata) {
-                    // standard metadata file
-                    if (metadataSource[0] === '.') {
-                        const metadataStepPath = changeExtension(file.path, metadataSource);
-                        try {
-                            if (await fileExists(metadataStepPath)) {
-                                let metaDataStep = await getMetadata(metadataStepPath);
-                                metaData = updateMetadataType(metaData, metadataStepPath) as IMetadata;
-                                mapMetadataToDictionary(metadataDictStep, metaData as IMetadata);
-                            }
-                            else {
-                                logger.warn(`[STEP] ⚠️ Extend metadata not available: ${metadataStepPath}`);
-                            }
-                        }
-                        catch (error) {
-                            logger.warn(`[STEP] ❌  can't load extended metadata file: ${metadataStepPath}`);
-                        }
-                    }
-                    // generic metadata file consumed as key value pair
-                    else {
-                        const pathSource = resolvePathFromFileDirectory(file.path, metadataSource);
-                        if (await fileExists(pathSource)) {
-                            const ext = await getMetadataGeneric(pathSource);
-                            // merge content with  current dictionary
-                            for (const key in ext) {
-                                if (!(key in metadataDictStep)) {
-                                    metadataDictStep[key] = String(ext[key]);
+                logger.debug(`[STEP] Executing: ${step.name}`);
+                const metadataDictStep: Record<string, string> = {};
+
+                if (step.metadata !== undefined && step.metadata.length > 0)  {
+                    for (const metadataSource of step.metadata) {
+                        // standard metadata file
+                        if (metadataSource[0] === '.') {
+                            const metadataStepPath = changeExtension(file.path, metadataSource);
+                            try {
+                                if (await fileExists(metadataStepPath)) {
+                                    let metaDataStep = await getMetadata(metadataStepPath);
+                                    metaData = updateMetadataType(metaData, metadataStepPath) as IMetadata;
+                                    mapMetadataToDictionary(metadataDictStep, metaData as IMetadata);
+                                }
+                                else {
+                                    logger.warn(`[STEP] ⚠️ Extend metadata not available: ${metadataStepPath}`);
                                 }
                             }
+                            catch (error) {
+                                logger.warn(`[STEP] ❌  can't load extended metadata file: ${metadataStepPath}`);
+                            }
                         }
+                        // generic metadata file consumed as key value pair
                         else {
-                            logger.warn(`[STEP] ⚠️ Extend metadata not available: ${pathSource}`);
+                            const pathSource = resolvePathFromFileDirectory(file.path, metadataSource);
+                            if (await fileExists(pathSource)) {
+                                const ext = await getMetadataGeneric(pathSource);
+                                // merge content with  current dictionary
+                                for (const key in ext) {
+                                    if (!(key in metadataDictStep)) {
+                                        metadataDictStep[key] = String(ext[key]);
+                                    }
+                                }
+                            }
+                            else {
+                                logger.warn(`[STEP] ⚠️ Extend metadata not available: ${pathSource}`);
+                            }
                         }
                     }
                 }
-            }
 
-            try {
-                const args = step.args.map(arg => applyMetadataToArgument(arg, metaDataDict)).map(arg => applyMetadataToArgument(arg, metadataDictStep));
-                const workingDir = step.workingDirectory
-                    ? applyMetadataToArgument(step.workingDirectory, metaDataDict)
-                    : path.dirname(file.path);
-                const stepSuccess = executeFile(step.command, args.join(' '), workingDir);
-                if (!stepSuccess) {
-                    logger.error(`[STEP] ❌ Step failed: ${step.name}`);
+                try {
+                    const args = step.args.map(arg => applyMetadataToArgument(arg, metaDataDict)).map(arg => applyMetadataToArgument(arg, metadataDictStep));
+                    const workingDir = step.workingDirectory
+                        ? applyMetadataToArgument(step.workingDirectory, metaDataDict)
+                        : path.dirname(file.path);
+                    const stepSuccess = executeFile(step.command, args.join(' '), workingDir);
+                    if (!stepSuccess) {
+                        logger.error(`[STEP] ❌ Step failed: ${step.name}`);
+                        allStepsResult = false;
+                        break;
+                    }
+
+                    const now = new Date();
+                    const metadataPath = appendExtension(file.path, 'metadata');
+                    metaData.Modified = now;
+                    metaData.ModifiedLocal = metaData.Modified.toLocaleString();
+                    saveMetadata(metaData, metadataPath);
+                    file.modified = now;
+
+                    logger.debug(`[STEP] ✅  Step succeeded: ${step.name}`);
+                } catch (error) {
+                    logger.error(`[STEP] ❌ Step error: ${error instanceof Error ? error.message : String(error)}`);
                     allStepsResult = false;
                     break;
                 }
-
-                const now = new Date();
-                const metadataPath = appendExtension(file.path, 'metadata');
-                metaData.Modified = now;
-                metaData.ModifiedLocal = metaData.Modified.toLocaleString();
-                saveMetadata(metaData, metadataPath);
-                file.modified = now;
-
-                logger.debug(`[STEP] ✅  Step succeeded: ${step.name}`);
-            } catch (error) {
-                logger.error(`[STEP] ❌ Step error: ${error instanceof Error ? error.message : String(error)}`);
-                allStepsResult = false;
-                break;
+            }
+            else {
+                logger.debug(`[STEP] skip step: ${step.name}`);
             }
         }
 
