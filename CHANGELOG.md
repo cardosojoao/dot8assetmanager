@@ -2,6 +2,12 @@
 
 All notable changes to the "dot8assetmanager" extension will be documented in this file.
 
+## [0.1.2] - 2026-05-08
+
+- Made `enable` field optional in action.metadata files, defaulting to `true` when omitted
+- Made `enable` field optional in action.metadata steps, defaulting to `true` when omitted
+- Made `Enable` field optional in asset .metadata files, defaulting to `true` when omitted
+
 ## [0.1.1] - 2026-05-02
 
 - Updated README metadata placeholder documentation:
