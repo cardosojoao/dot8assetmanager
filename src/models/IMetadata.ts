@@ -4,7 +4,7 @@ export interface IMetadata {
      * Disables action execution for this asset only.
      * Folder-wide disable behavior is controlled by action.metadata `enable`.
      */
-    Enable: boolean;
+    Enable?: boolean;
     Name: string;
     Path: string;
     Modified: Date;             // date with time zone, used for compare operations

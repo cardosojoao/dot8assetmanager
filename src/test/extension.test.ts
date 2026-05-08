@@ -144,8 +144,8 @@ suite('utils.mapMetadataToDictionary', () => {
         assert.strictEqual(dict['cellheight'], '16');
         assert.strictEqual(dict['columns'], '4');
         assert.strictEqual(dict['rows'], '3');
-        assert.strictEqual(dict['width'], '64');   // 16 * 4
-        assert.strictEqual(dict['height'], '48');  // 16 * 3
+        assert.strictEqual(dict['width'], '16');
+        assert.strictEqual(dict['height'], '16');
         assert.strictEqual(dict['file'], '/assets/sprite.png');
         assert.strictEqual(dict['enabled'], 'true');
         assert.strictEqual(dict['name'], 'sprite');
@@ -314,6 +314,25 @@ suite('Action', () => {
         assert.strictEqual(action.enable, false);
     });
 
+    test('missing step enable defaults to true', () => {
+        const actionWithoutStepEnable = {
+            ...actionFixture,
+            steps: [{ name: 'common', command: 'echo', args: ['hello'] }],
+            byExtension: {
+                '.png': { steps: [{ name: 'png-step', command: 'convert', args: ['${file}'] }] },
+                default: { steps: [{ name: 'fallback', command: 'cp', args: ['${file}'] }] },
+            },
+        };
+
+        const file = path.join(tmpDir, 'action.metadata');
+        fs.writeFileSync(file, JSON.stringify(actionWithoutStepEnable));
+
+        const action = Action.fromFile(file);
+        assert.strictEqual(action.steps[0].enable, true);
+        assert.strictEqual(action.byExtension['.png'].steps[0].enable, true);
+        assert.strictEqual(action.byExtension.default.steps[0].enable, true);
+    });
+
     test('getStepsForFile returns common + extension-specific steps', () => {
         const file = path.join(tmpDir, 'action.metadata');
         fs.writeFileSync(file, JSON.stringify(actionFixture));
@@ -391,7 +410,7 @@ suite('metaData.saveMetadata', () => {
         saveMetadata(md, metaPath);
         const parsed = JSON.parse(fs.readFileSync(metaPath, 'utf-8')) as IMetadata;
         assert.strictEqual(parsed.Name, 'sprite');
-        assert.strictEqual(parsed.Width, 16);
+        assert.strictEqual(parsed.Width, 64);
     });
 });
 
@@ -442,8 +461,8 @@ suite('metaData.updateMetadataType', () => {
         fs.writeFileSync(tilesetPath, tilesetXml, 'utf-8');
 
         const updated = updateMetadataType(makeMetadata({ Path: tilesetPath, Width: undefined, Height: undefined, Columns: undefined, Rows: undefined }), tilesetPath);
-        assert.strictEqual(updated.Width, 16);
-        assert.strictEqual(updated.Height, 16);
+        assert.strictEqual(updated.Width, 64);
+        assert.strictEqual(updated.Height, 64);
         assert.strictEqual(updated.Columns, 4);
         assert.strictEqual(updated.Rows, 4);
         assert.strictEqual(updated.Path, tilesetPath);

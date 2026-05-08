@@ -13,13 +13,25 @@ export class Action implements IActionFile {
         default: IExtensionSteps;
     };
 
+    private normalizeStep(step: IStep): IStep {
+        return {
+            enable: step.enable ?? true,
+            ...step,
+        };
+    }
+
     constructor(data: IActionFile) {
         this.name = data.name;
         this.description = data.description;
-        this.steps = data.steps;
-        this.byExtension = data.byExtension;
+        this.steps = data.steps.map(step => this.normalizeStep(step));
+        this.byExtension = {} as { [extension: string]: IExtensionSteps; default: IExtensionSteps };
+        for (const extension in data.byExtension) {
+            this.byExtension[extension] = {
+                steps: data.byExtension[extension].steps.map(step => this.normalizeStep(step)),
+            };
+        }
         this.extensionOrder = data.extensionOrder;
-        this.enable = data.enable;
+        this.enable = data.enable ?? true;
     }
 
     getStepsForFile(filePath: string): IStep[] {

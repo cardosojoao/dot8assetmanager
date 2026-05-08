@@ -56,11 +56,10 @@ export function mapMetadataToDictionary(store: Record<string, string>, metadata:
         addIfNotExists(store, 'name', metadata.Name);
     }
 
-
-
-    // if (metadata.Modified !== undefined) {
-    //     addIfNotExists(store, 'modified', metadata.Modified.toISOString());
-    // }
+    if (metadata.Path !== undefined) {
+        addIfNotExists(store, 'file', metadata.Path);
+        addIfNotExists(store, 'directory', path.dirname(metadata.Path));
+    }
 
     if (metadata.CellWidth !== undefined) {
         addIfNotExists(store, 'cellwidth', String(metadata.CellWidth));

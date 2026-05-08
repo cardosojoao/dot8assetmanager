@@ -116,6 +116,7 @@ export async function getMetadata(fileData: string): Promise<IMetadata> {
 export async function loadMetadata(filePath: string): Promise<IMetadata> {
     const raw = await fs.promises.readFile(filePath, 'utf-8');
     const parsed = JSON.parse(raw) as IMetadata;
+    parsed.Enable = parsed.Enable ?? true;
     return parsed;
 }
 

@@ -1,6 +1,6 @@
 export interface IStep {
     name: string;
-    enable: boolean;
+    enable?: boolean;
     metadata: string[];
     command: string;
     workingDirectory?: string;
