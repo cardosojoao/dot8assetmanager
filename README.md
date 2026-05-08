@@ -60,19 +60,24 @@ No action.metadata file is currently committed in this repository, but the runti
 Required top-level fields:
 
 - name: string
-- enable: boolean
 - steps: IStep[]
 - byExtension: object containing extension keys and a default key
 
 Optional top-level fields:
 
 - description: string
+- enable?: boolean (defaults to true)
 - extensionOrder: string[] (defines desired file extension processing order; currently declared in type but not enforced by step resolution logic)
 
 Enable behavior:
 
 - `action.metadata.enable: false` disables action execution for that folder and any subfolder that inherits the same nearest `action.metadata` file.
 - A closer `action.metadata` in a child folder overrides the parent folder's action selection.
+- If `enable` is omitted, it defaults to `true`.
+
+## Root action.metadata
+
+You can place an `action.metadata` file at the workspace root to define default actions for the entire project. Child folders can override or extend these actions by placing their own `action.metadata` files. The extension searches from the asset's folder up to the workspace root to find the applicable action configuration.
 
 Step fields used by runtime:
 
@@ -167,7 +172,7 @@ The generated sidecar file `file.ext.metadata` uses the shape defined by [src/mo
 
 Important field behavior:
 
-- `Enable: false` skips action execution for that specific asset file only.
+- `Enable?: boolean` (defaults to true) - `Enable: false` skips action execution for that specific asset file only.
 - `Enable` does not disable sibling files, the containing folder, or child folders.
 - To disable a folder or subtree, set `enable: false` in the nearest `action.metadata` file instead.
 
@@ -236,7 +241,7 @@ Current enrichment logic:
 - .png: sets GeneratedBy and Path
 - .afb and .pt3: set GeneratedBy and Path
 - other extensions: base metadata only unless updated by other flows
-- new metadata files are created with `Enable: true`
+- new metadata files are created with `Enable: true` (this field defaults to `true` if omitted in existing files)
 
 Metadata Modified is updated to current timestamp only after all action steps for a file succeed.
 
