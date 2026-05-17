@@ -121,10 +121,14 @@ export const executeFile = (filePath: string, parameters: string, workingDirecto
         logger.debug(`[EXEC] Output: ${output.trim()}`);
         return true;
     } catch (error: unknown) {
-        const errorObj = error as { stderr?: string; message?: string; code?: number };
-        const stderr = errorObj.stderr || errorObj.message || String(error);
+        const errorObj = error as { stdout?: string; stderr?: string; message?: string; code?: number };
+        const stdout = errorObj.stdout?.trim() || '';
+        const stderr = errorObj.stderr?.trim() || errorObj.message || String(error);
         const code = errorObj.code || 'UNKNOWN';
-        logger.error(`[EXEC] Failed with code ${code}: ${stderr.trim()}`);
+        if (stdout) {
+            logger.debug(`[EXEC] Output: ${stdout}`);
+        }
+        logger.error(`[EXEC] Failed with code ${code}: ${stderr}`);
         return false;
     }
 };

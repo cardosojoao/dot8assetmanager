@@ -3,7 +3,7 @@
   "publisher": "bapa",
   "displayName": "dot8 asset manager",
   "description": "Dot 8 Engine asset manager",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "icon": "images/logo_black.png",
   "repository": {
     "type": "git",
