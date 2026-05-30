@@ -93,47 +93,133 @@ How step selection works:
 2. Extension-specific steps are appended based on file extension.
 3. If no extension match exists, byExtension.default.steps is used.
 
-Example action.metadata:
+## Complete action.metadata example
+
+The following is a complete production-style example showing extension ordering, metadata dependencies, multi-stage processing, palette merging, and asset deployment:
 
 ```json
 {
-  "name": "asset-pipeline",
+  "name": "TileSheet build-action",
+  "description": "Compile and process files",
   "enable": true,
-  "description": "Example pipeline",
-  "steps": [
-    {
-      "name": "log-start",
-      "command": "echo",
-      "args": ["processing ${file}"]
-    }
+  "steps": [],
+  "extensionOrder": [
+    "png",
+    "nxp",
+    "spr"
   ],
   "byExtension": {
     ".png": {
       "steps": [
         {
-          "name": "convert-png",
-          "metadata": ["pipeline.metadata"],
-          "workingDirectory": "${directory}",
-          "command": "convert",
+          "name": "transform png into spr",
+          "metadata": [
+            ".tsx"
+          ],
+          "command": "gfx2next.exe",
           "args": [
+            "-pal-ext",
+            "-sprites",
+            "-tile-size=${cellwidth}x${cellheight}",
             "${file}",
-            "${filewithoutextension}.out.png"
-          ]
+            "${filewithoutextension}.spr"
+          ],
+          "workingDirectory": "${directory}"
+        },
+        {
+          "name": "Rotate and Mirror",
+          "enable": true,
+          "metadata": [
+            ".tsx"
+          ],
+          "command": "\"D:\\utils\\PatternParser\\PatternParser.exe\"",
+          "args": [
+            "-i\"${filewithoutextension}.spr\"",
+            "-o\"${filewithoutextension}.spr\" -w${width} -h${height} -c${cellwidth} -d${cellheight}"
+          ],
+          "workingDirectory": "${directory}"
+        }
+      ]
+    },
+    ".tsx": {
+      "steps": [
+        {
+          "name": "transform png into spr",
+          "enable": true,
+          "command": "gfx2next.exe",
+          "args": [
+            "-pal-ext",
+            "-sprites",
+            "-tile-size=${cellwidth}x${cellheight}",
+            "${filewithoutextension}.png",
+            "${filewithoutextension}.spr"
+          ],
+          "workingDirectory": "${directory}"
+        },
+        {
+          "name": "Rotate and Mirror",
+          "enable": true,
+          "metadata": [
+            ".tsx"
+          ],
+          "command": "\"D:\\utils\\PatternParser\\PatternParser.exe\"",
+          "args": [
+            "-i\"${filewithoutextension}.spr\"",
+            "-o\"${filewithoutextension}.spr\" -w${width} -h${height} -c${cellwidth} -d${cellheight}"
+          ],
+          "workingDirectory": "${directory}"
+        },
+        {
+          "name": "parser tsx metadata into tilesheet metadata",
+          "enable": true,
+          "metadata": [
+            ".tsx"
+          ],
+          "command": "\"D:\\utils\\TileSheetMetadataParser\\TileSheetMetadataParser.exe\"",
+          "args": [
+            "-i\"${file}\"",
+            "-o\"${root0}\\data\\tilesheets\\${filenamewithoutextension}.metadata\""
+          ],
+          "workingDirectory": "${directory}"
+        }
+      ]
+    },
+    ".nxp": {
+      "steps": [
+        {
+          "name": "Merge pattern palette with global palette",
+          "enable": true,
+          "command": "\"D:\\utils\\PatternPaletteParser\\PatternPaletteParser.exe\"",
+          "args": [
+            "pattern",
+            "-i\"${file}\"",
+            "-p\"${root1}\\Palettes\\Dynamic\\layer2_01.nxp\""
+          ],
+          "workingDirectory": "${directory}"
+        }
+      ]
+    },
+    ".spr": {
+      "steps": [
+        {
+          "name": "copy tilesheet paterns to solution",
+          "enable": true,
+          "command": "copy",
+          "args": [
+            "\"${file}\"",
+            "\"${root0}\\data\\tilesheets\""
+          ],
+          "workingDirectory": "${directory}"
         }
       ]
     },
     "default": {
-      "steps": [
-        {
-          "name": "fallback-copy",
-          "command": "echo",
-          "args": ["No specific rule for ${file}"]
-        }
-      ]
+      "steps": []
     }
   }
 }
 ```
+
 
 ## Metadata placeholder variables
 
