@@ -2,6 +2,10 @@
 
 All notable changes to the "dot8assetmanager" extension will be documented in this file.
 
+## [0.1.4] - 2026-06-20
+- Feedback Command
+
+
 ## [0.1.3] - 2026-05-17
 
 - Fixed command execution logging to capture stdout output when errors occur
