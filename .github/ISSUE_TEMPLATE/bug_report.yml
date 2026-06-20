@@ -1,0 +1,93 @@
+name: Bug Report
+description: Report a bug in the Dot8 VS Code extension or asset pipeline system
+title: "[Bug]: "
+labels: ["bug"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug in Dot8. Please provide as much detail as possible so we can reproduce and fix the issue quickly.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: What is the issue?
+      placeholder: |
+        Describe the unexpected behavior...
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Provide a clear sequence of steps to reproduce the bug.
+      placeholder: |
+        1. Open project
+        2. Scan asset folder
+        3. Execute pipeline
+        4. Observe error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What should have happened instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / Error Output
+      description: Paste any relevant logs, stack traces, or console output
+      render: shell
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Dot8 Context
+      description: Which part of the system is affected?
+      placeholder: |
+        - Asset scanner
+        - Sidecar metadata generation
+        - action.metadata pipeline execution
+        - VS Code extension UI
+
+  - type: input
+    id: version-extension
+    attributes:
+      label: Extension Version
+      placeholder: e.g. 0.1.0
+
+  - type: input
+    id: version-vscode
+    attributes:
+      label: VS Code Version
+      placeholder: e.g. 1.85.0
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      options:
+        - Windows
+        - macOS
+        - Linux
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Screenshots, reproduction notes, or related issues

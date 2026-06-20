@@ -5,6 +5,7 @@ import { registerUpdateChangedCommand } from './commands/updateChanged';
 import { registerUpdateAllCommand } from './commands/updateAll';
 import { registerUpdateMetadataCommand } from './commands/updateMetadata';
 import { registerAutoUpdateCommand } from './commands/autoUpdate';
+import { registerFeedbackCommand } from './commands/feedback';
 
 /**
  * Activates the extension, loads configuration, creates output logging, and
@@ -17,6 +18,7 @@ export async function activate(context: vscode.ExtensionContext) {
     registerUpdateMetadataCommand(context);
     registerUpdateChangedCommand(context);
     registerUpdateAllCommand(context);
+    registerFeedbackCommand(context);
 
     logger.info("Extension activated");
     logger.debug("Current Settings:");

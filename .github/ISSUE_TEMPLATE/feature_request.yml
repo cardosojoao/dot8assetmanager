@@ -1,0 +1,68 @@
+name: Feature Request
+description: Suggest an improvement or new capability for the Dot8 VS Code extension
+title: "[Feature]: "
+labels: ["enhancement"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting an improvement to Dot8. Please describe your idea clearly so we can evaluate it properly.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / Motivation
+      description: What problem are you trying to solve?
+      placeholder: |
+        Example: Managing asset metadata manually is slow and error-prone...
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed Solution
+      description: Describe the feature or improvement you'd like to see.
+      placeholder: |
+        Example: Automatically generate or validate action.metadata pipelines when scanning assets...
+    validations:
+      required: true
+
+  - type: textarea
+    id: workflow
+    attributes:
+      label: Dot8 Workflow Context
+      description: How does this fit into your asset pipeline or engine workflow?
+      placeholder: |
+        - Asset scanning
+        - Sidecar metadata generation
+        - Action pipeline execution
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: What other approaches have you tried or considered?
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected Area
+      options:
+        - Asset scanning
+        - Metadata sidecars
+        - Action pipelines (action.metadata)
+        - Build/export process
+        - Editor integration
+        - Performance
+        - Other
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Add diagrams, examples, or references if useful
