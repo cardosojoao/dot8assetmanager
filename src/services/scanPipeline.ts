@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { IFileItem } from '../models/IFileItem';
 import { createMetadata } from './metadata';
 import { fileChanges, getFiles, getMetadataFiles, IFileChangeEvent, watchFoldersAndCollectChanges, waitForFileSystemStability } from './files';
-import { processFiles } from './processFiles';
+import { processFiles, IProcessFilesResult } from './processFiles';
 import { logger } from '../services/logger';
 import path from 'path';
 import { config } from '../config/config';
@@ -22,6 +22,13 @@ export async function runScanPipeline(options: IScanPipelineOptions): Promise<vo
     // first set of files to process
     let files = await getFiles(options.scanFolders, options.scanExtensions);
     let pass = 1;
+    let scanSummary: IProcessFilesResult = {
+        totalFiles: 0,
+        succeeded: 0,
+        skipped: 0,
+        failed: 0,
+        errors: [],
+    };
 
     while (true) {
         logger.info(`[SCAN] Pass ${pass} Found ${files.length} files to process`);
@@ -47,7 +54,12 @@ export async function runScanPipeline(options: IScanPipelineOptions): Promise<vo
         }
         if (filesToProcess.length > 0) {
             const watchers = await watchFoldersAndCollectChanges(options.scanFolders, options.scanExtensions);
-            await processFiles(filesToProcess);
+            const processResult: IProcessFilesResult = await processFiles(filesToProcess);
+            scanSummary.totalFiles += processResult.totalFiles;
+            scanSummary.succeeded += processResult.succeeded;
+            scanSummary.skipped += processResult.skipped;
+            scanSummary.failed += processResult.failed;
+            scanSummary.errors.push(...processResult.errors);
             await waitForFileSystemStability(1000); // Wait for file system events to stabilize (1000ms of silence)
             await watchers.dispose();
         }
@@ -81,5 +93,14 @@ export async function runScanPipeline(options: IScanPipelineOptions): Promise<vo
     }
 
     const duration = Date.now() - startTime;
+    
     logger.info(`[SCAN] Completed in ${duration}ms at ${new Date()}`);
+    logger.info(`----------------------------------------`);
+    logger.info(`[SCAN] Summary: processed=${scanSummary.totalFiles}, succeeded=${scanSummary.succeeded}, skipped=${scanSummary.skipped}, failed=${scanSummary.failed}`);
+    if (scanSummary.errors.length > 0) {
+        logger.info('[SCAN] Detailed errors:');
+        for (const error of scanSummary.errors) {
+            logger.info(`[ERROR] ${error.filePath} | step=${error.stepName} | ${error.message}`);
+        }
+    }
 }
