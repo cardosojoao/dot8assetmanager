@@ -334,6 +334,8 @@ Metadata Modified is updated to current timestamp only after all action steps fo
 
 ## Development
 
+For the complete release workflow, see [Build and publish Dot8 Asset Manager](PUBLISHING.md).
+
 Requirements:
 
 - VS Code ^1.115.0

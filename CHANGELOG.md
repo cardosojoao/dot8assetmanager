@@ -2,6 +2,13 @@
 
 All notable changes to the "dot8assetmanager" extension will be documented in this file.
 
+## [0.1.6] - 2026-11-22
+
+- Prevented **Touch Asset Metadata** from processing `action.metadata` as an asset sidecar, avoiding duplicate `enable`/`Enable` properties and unwanted timestamp fields.
+- Limited metadata updates to sidecars whose corresponding source asset exists.
+- Corrected the root-folder metadata scan glob.
+- Added regression coverage for asset, action, and orphaned metadata files.
+
 ## [0.1.5] - 2026-07-26
 - Add summary
 
