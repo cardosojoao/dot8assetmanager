@@ -1,10 +1,26 @@
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import * as vscode from 'vscode';
-import { IMetadata } from '../models/IMetadata';
 import { changeExtension, fileExists } from '../utils/utils';
-import { getMetadata, loadMetadata, saveMetadata } from '../services/metadata';
+import { loadMetadata, saveMetadata } from '../services/metadata';
 import { getFile, getFiles } from '../services/files';
+
+/**
+ * Returns true only for an asset sidecar whose source asset still exists.
+ * Action configuration also uses the .metadata extension, but it is a
+ * different schema and must never be handled as asset metadata.
+ */
+export async function isAssetMetadataFile(metadataPath: string): Promise<boolean> {
+  if (path.extname(metadataPath).toLowerCase() !== '.metadata') {
+    return false;
+  }
+
+  if (path.basename(metadataPath).toLowerCase() === 'action.metadata') {
+    return false;
+  }
+
+  return fileExists(changeExtension(metadataPath, ''));
+}
 
 
 export function registerUpdateMetadataCommand(context: vscode.ExtensionContext) {
@@ -24,6 +40,10 @@ export function registerUpdateMetadataCommand(context: vscode.ExtensionContext) 
           const filesMetadata = await getFiles([selectedPath], ["metadata"]);
           let updatedCount = 0;
           for (const metadataPath of filesMetadata) {
+            if (!(await isAssetMetadataFile(metadataPath.path))) {
+              continue;
+            }
+
             let metadata = await loadMetadata(metadataPath.path);
             if (!metadata) {
               continue; // Skip if metadata cannot be loaded
@@ -38,6 +58,11 @@ export function registerUpdateMetadataCommand(context: vscode.ExtensionContext) 
 
           const fileMetadata = getFile(selectedPath);
           // Handle single file
+
+          if (!(await isAssetMetadataFile(fileMetadata.path))) {
+            vscode.window.showErrorMessage('Only asset metadata sidecars can be updated.');
+            return;
+          }
 
           const metadata = await loadMetadata(fileMetadata.path);
 

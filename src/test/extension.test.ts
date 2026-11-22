@@ -22,6 +22,7 @@ import { Action } from '../models/action';
 import { IMetadata } from '../models/IMetadata';
 import { createMetadata, saveMetadata, updateMetadataType, getMetadata, getMetadataGeneric } from '../services/metadata';
 import { TimerManager } from '../services/timer';
+import { isAssetMetadataFile } from '../commands/updateMetadata';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -497,6 +498,43 @@ suite('metaData.getMetadata readers', () => {
         const parsed = await getMetadataGeneric(genericPath);
         assert.strictEqual(parsed.quality, 'high');
         assert.strictEqual(String(parsed.retries), '2');
+    });
+});
+
+suite('updateMetadata asset sidecar validation', () => {
+    let tmpDir: string;
+
+    setup(() => {
+        tmpDir = makeTempDir();
+    });
+
+    teardown(() => {
+        fs.rmSync(tmpDir, { recursive: true, force: true });
+    });
+
+    test('accepts metadata when the corresponding asset exists', async () => {
+        const assetPath = path.join(tmpDir, 'sprite.png');
+        const metadataPath = appendExtension(assetPath, 'metadata');
+        fs.writeFileSync(assetPath, 'asset');
+        fs.writeFileSync(metadataPath, '{}');
+
+        assert.strictEqual(await isAssetMetadataFile(metadataPath), true);
+    });
+
+    test('rejects action metadata even if a matching action file exists', async () => {
+        const actionPath = path.join(tmpDir, 'action');
+        const metadataPath = path.join(tmpDir, 'action.metadata');
+        fs.writeFileSync(actionPath, 'action');
+        fs.writeFileSync(metadataPath, JSON.stringify({ enable: false }));
+
+        assert.strictEqual(await isAssetMetadataFile(metadataPath), false);
+    });
+
+    test('rejects orphaned metadata sidecars', async () => {
+        const metadataPath = path.join(tmpDir, 'missing.png.metadata');
+        fs.writeFileSync(metadataPath, '{}');
+
+        assert.strictEqual(await isAssetMetadataFile(metadataPath), false);
     });
 });
 

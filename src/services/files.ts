@@ -87,7 +87,7 @@ export async function getFiles(scanFolders: string[], extensions: string[] = [])
 
             let relative = path.relative(rootFolder.uri.fsPath, folder);
             relative = relative.replace(/\\/g, '/');
-            const patternPath = relative ? `${relative}/**/*.{${extensions.join(",")}}` : `**/*.{${extensions.join(",")}`;
+            const patternPath = relative ? `${relative}/**/*.{${extensions.join(",")}}` : `**/*.{${extensions.join(",")}}`;
             const pattern = new vscode.RelativePattern(rootFolder, patternPath);
 
             const files = await vscode.workspace.findFiles(
