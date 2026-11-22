@@ -2,6 +2,11 @@
 
 All notable changes to the "dot8assetmanager" extension will be documented in this file.
 
+## [0.1.7] - 2026-11-22
+
+- Changed **Touch Asset Metadata** to reset only timestamp fields, preserving the asset's `Enable` property and leaving it omitted when it was not originally present.
+- Added regression coverage for missing and disabled asset metadata `Enable` properties.
+
 ## [0.1.6] - 2026-11-22
 
 - Prevented **Touch Asset Metadata** from processing `action.metadata` as an asset sidecar, avoiding duplicate `enable`/`Enable` properties and unwanted timestamp fields.
