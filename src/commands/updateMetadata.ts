@@ -2,7 +2,8 @@ import * as path from 'path';
 import * as fs from 'fs/promises';
 import * as vscode from 'vscode';
 import { changeExtension, fileExists } from '../utils/utils';
-import { loadMetadata, saveMetadata } from '../services/metadata';
+import { saveMetadata } from '../services/metadata';
+import { IMetadata } from '../models/IMetadata';
 import { getFile, getFiles } from '../services/files';
 
 /**
@@ -20,6 +21,22 @@ export async function isAssetMetadataFile(metadataPath: string): Promise<boolean
   }
 
   return fileExists(changeExtension(metadataPath, ''));
+}
+
+/**
+ * Resets only the processing timestamps on an asset metadata sidecar.
+ *
+ * Do not use loadMetadata here: it applies runtime defaults (including
+ * Enable: true), which would make a touch rewrite properties the user did not
+ * ask to change.
+ */
+export async function touchAssetMetadata(metadataPath: string): Promise<void> {
+  const raw = await fs.readFile(metadataPath, 'utf-8');
+  const metadata = JSON.parse(raw) as IMetadata;
+  const resetDate = new Date(0);
+  metadata.Modified = resetDate;
+  metadata.ModifiedLocal = resetDate.toLocaleString();
+  saveMetadata(metadata, metadataPath);
 }
 
 
@@ -44,13 +61,7 @@ export function registerUpdateMetadataCommand(context: vscode.ExtensionContext) 
               continue;
             }
 
-            let metadata = await loadMetadata(metadataPath.path);
-            if (!metadata) {
-              continue; // Skip if metadata cannot be loaded
-            }
-            metadata.Modified = new Date(0);
-            metadata.ModifiedLocal = new Date(0).toLocaleString();
-            await saveMetadata(metadata, metadataPath.path);
+            await touchAssetMetadata(metadataPath.path);
             updatedCount++;
           }
           vscode.window.showInformationMessage(`Updated metadata for ${updatedCount} files in folder ${path.basename(selectedPath)}`);
@@ -64,15 +75,7 @@ export function registerUpdateMetadataCommand(context: vscode.ExtensionContext) 
             return;
           }
 
-          const metadata = await loadMetadata(fileMetadata.path);
-
-          if (!metadata) {
-            vscode.window.showErrorMessage('Failed to load metadata file.');
-            return;
-          }
-          metadata.Modified = new Date(0);
-          metadata.ModifiedLocal = new Date(0).toLocaleString();          
-          await saveMetadata(metadata, fileMetadata.path);
+          await touchAssetMetadata(fileMetadata.path);
           vscode.window.showInformationMessage(`Updated metadata: ${path.basename(selectedPath)}`);
         }
       } catch (error) {

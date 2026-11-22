@@ -22,7 +22,7 @@ import { Action } from '../models/action';
 import { IMetadata } from '../models/IMetadata';
 import { createMetadata, saveMetadata, updateMetadataType, getMetadata, getMetadataGeneric } from '../services/metadata';
 import { TimerManager } from '../services/timer';
-import { isAssetMetadataFile } from '../commands/updateMetadata';
+import { isAssetMetadataFile, touchAssetMetadata } from '../commands/updateMetadata';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -535,6 +535,36 @@ suite('updateMetadata asset sidecar validation', () => {
         fs.writeFileSync(metadataPath, '{}');
 
         assert.strictEqual(await isAssetMetadataFile(metadataPath), false);
+    });
+
+    test('touch preserves a missing Enable property', async () => {
+        const metadataPath = path.join(tmpDir, 'sprite.png.metadata');
+        fs.writeFileSync(metadataPath, JSON.stringify({
+            Path: path.join(tmpDir, 'sprite.png'),
+            Modified: '2026-01-01T00:00:00.000Z',
+            ModifiedLocal: 'original',
+        }));
+
+        await touchAssetMetadata(metadataPath);
+
+        const touched = JSON.parse(fs.readFileSync(metadataPath, 'utf-8')) as Record<string, unknown>;
+        assert.strictEqual(Object.hasOwn(touched, 'Enable'), false);
+        assert.strictEqual(touched.Modified, '1970-01-01T00:00:00.000Z');
+    });
+
+    test('touch preserves an existing disabled state', async () => {
+        const metadataPath = path.join(tmpDir, 'sprite.png.metadata');
+        fs.writeFileSync(metadataPath, JSON.stringify({
+            Enable: false,
+            Modified: '2026-01-01T00:00:00.000Z',
+            ModifiedLocal: 'original',
+        }));
+
+        await touchAssetMetadata(metadataPath);
+
+        const touched = JSON.parse(fs.readFileSync(metadataPath, 'utf-8')) as Record<string, unknown>;
+        assert.strictEqual(touched.Enable, false);
+        assert.strictEqual(touched.Modified, '1970-01-01T00:00:00.000Z');
     });
 });
 
